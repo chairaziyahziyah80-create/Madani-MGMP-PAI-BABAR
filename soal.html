@@ -354,6 +354,23 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
 .gbox .gi{flex:1;min-width:0;font-size:12px;color:var(--muted)}
 .gbox .gi b{display:block;color:var(--text);font-size:12.5px}
 .gbox .gb{display:flex;gap:2px;flex:none}
+.lnkbox{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 8px 8px 12px;border-radius:12px;background:var(--track)}
+.lnkbox .li{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--accent);background:rgba(18,160,95,.14)}
+.lnkbox .li svg{width:18px;height:18px}
+.lnkbox .gi{flex:1;min-width:0;font-size:12px;color:var(--muted)}
+.lnkbox .gi b{display:block;color:var(--text);font-size:12.5px}
+.lnkbox .gi a{display:block;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:underline}
+.lnkbox .gb{display:flex;gap:2px;flex:none}
+.lnkrow{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px;border-radius:12px;background:var(--track)}
+.lnkrow .li{flex:none;color:var(--accent);display:grid;place-items:center}
+.lnkrow .li svg{width:18px;height:18px}
+.lnkrow input{flex:1;min-width:0}
+.lnkrow button.lb{flex:none;padding:7px 12px;border-radius:9px;font-size:12.5px;font-weight:700}
+.lnkrow button.lb.ok{background:var(--accent);color:#fff}
+.lnkrow button.lb.no{color:var(--muted)}
+.pl{display:flex;align-items:center;gap:8px;margin:10px 0 2px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px}
+.pl svg{width:17px;height:17px;flex:none;color:var(--accent)}
+.pl a{color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:underline;min-width:0}
 .pimg{display:block;max-width:100%;max-height:280px;margin:10px 0 2px;border-radius:10px;border:1px solid var(--line);background:#fff}
 .bsrow{display:flex;gap:8px;margin-top:10px}
 .bsrow label{position:relative;flex:1;cursor:pointer}
@@ -484,6 +501,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   #naskahPrint .nk-b{flex:1;min-width:0}
   #naskahPrint .nk-t{white-space:pre-wrap;overflow-wrap:anywhere}
   #naskahPrint .nk-sk{font-size:9.5pt;color:#444;white-space:nowrap}
+  #naskahPrint .nk-lnk{margin:5px 0 2px;font-size:10pt;overflow-wrap:anywhere}
   #naskahPrint .nk-img{display:block;max-width:100%;max-height:62mm;margin:6px 0 2px;border:1px solid #bbb}
   #naskahPrint .nk-o{display:flex;gap:7px;margin-top:3px;padding-left:2px}
   #naskahPrint .nk-o b{flex:none;width:18px;font-weight:400}
@@ -793,7 +811,10 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     upload:'<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19.5h14"/>',
     info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
     print:'<path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
-    image:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>'
+    image:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>',
+    suara:'<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11"/>',
+    video:'<rect x="3" y="5.5" width="13" height="13" rx="3"/><path d="M16 10.5l5-3v9l-5-3z"/>',
+    link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'
   };
   function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+P[n]+'</svg>';}
   function paintIcons(root){(root||document).querySelectorAll('[data-i]').forEach(function(e){e.innerHTML=svg(e.dataset.i);});}
@@ -1001,6 +1022,24 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var m='/object/public/'+BUCKET+'/',i=String(u||'').indexOf(m);
     return i<0?null:decodeURIComponent(u.slice(i+m.length).split('?')[0]);
   }
+  /* ---------- Lampiran link (suara / video) — disimpan di kolom "gambar" (text) ---------- */
+  function kindOf(u){
+    u=String(u||'');
+    var h=(u.split('#')[1]||'').toLowerCase();
+    if(h==='suara'||h==='video')return h;
+    var base=u.split('#')[0].split('?')[0].toLowerCase();
+    if(/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(base))return 'suara';
+    if(/\.(mp4|webm|mov|m4v|mkv|ogv)$/.test(base)||/^https?:\/\/([a-z0-9-]+\.)*(youtube\.com|youtu\.be|vimeo\.com)\//.test(base))return 'video';
+    return 'image';
+  }
+  function safeLink(u){return /^https?:\/\/\S+$/i.test(String(u||'').trim());}
+  /* tambahkan penanda #suara / #video hanya bila jenis tidak terbaca dari alamatnya */
+  function normLink(u,kind){
+    u=String(u||'').trim();
+    return kindOf(u)===kind?u:u.split('#')[0]+'#'+kind;
+  }
+  function cleanLink(u){return String(u||'').replace(/#(suara|video)$/i,'');}
+  var KIND_LBL={suara:'Suara',video:'Video'};
   async function hapusGambar(paths){
     paths=(paths||[]).filter(Boolean);
     if(!paths.length||!db)return;
@@ -1168,7 +1207,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     $('pHead').innerHTML='<span class="pill g">'+esc(p.kelas)+'</span><span class="pill b">'+esc(BENTUK[p.bentuk]||'')+'</span><span class="pill o">'+esc(katLabel(p))+'</span><span class="pill m">'+p.soal.length+' soal · skor '+totalSkor(p)+'</span>'+(p.materi?'<span class="pill m">'+esc(p.materi)+'</span>':'');
     $('pDesk').textContent=p.deskripsi||'';$('pDesk').hidden=!p.deskripsi;
     $('pBody').innerHTML=p.soal.map(function(s,i){
-      var h='<div class="pq"><div class="pt"><div class="qn">'+(i+1)+'</div><p>'+esc(s.teks)+'</p><span class="sc">'+(s.tipe==='tts'?(s.arah==='menurun'?'Menurun':'Mendatar')+' · ':'')+s.skor+' poin</span></div>'+(s.gambar?'<img class="pimg" src="'+esc(s.gambar)+'" alt="Gambar soal '+(i+1)+'" loading="lazy">':'');
+      var h='<div class="pq"><div class="pt"><div class="qn">'+(i+1)+'</div><p>'+esc(s.teks)+'</p><span class="sc">'+(s.tipe==='tts'?(s.arah==='menurun'?'Menurun':'Mendatar')+' · ':'')+s.skor+' poin</span></div>'+lampPrev(s,i);
       if(s.tipe==='pg')h+=s.opsi.map(function(o,j){return '<div class="po'+(j===s.kunci?' ok':'')+'"><b>'+'ABCD'.charAt(j)+'</b><span>'+esc(o)+'</span></div>';}).join('');
       else if(s.tipe==='bs')h+='<div class="po'+(s.kunci===true?' ok':'')+'"><b>B</b><span>Benar</span></div><div class="po'+(s.kunci===false?' ok':'')+'"><b>S</b><span>Salah</span></div>';
       else if(s.tipe==='tts')h+='<div class="cells" aria-label="Jawaban: '+esc(s.jawaban)+'">'+String(s.jawaban||'').split('').map(function(c){return '<i>'+esc(c)+'</i>';}).join('')+'</div>';
@@ -1176,6 +1215,13 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       return h+'</div>';
     }).join('')||'<div class="noq">Paket ini belum memiliki butir soal.</div>';
     openSheet('shPrev');
+  }
+  function lampPrev(s,i){
+    if(!s.gambar)return '';
+    var k=kindOf(s.gambar);
+    if(k==='image')return '<img class="pimg" src="'+esc(s.gambar)+'" alt="Gambar soal '+(i+1)+'" loading="lazy">';
+    var u=cleanLink(s.gambar);
+    return '<div class="pl">'+svg(k)+'<a href="'+esc(safeLink(u)?u:'#')+'" target="_blank" rel="noopener noreferrer">'+esc(u)+'</a></div>';
   }
   $('pEdit').addEventListener('click',function(){if(curPrev!=null)openNew(curPrev);});
 
@@ -1341,17 +1387,30 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   document.addEventListener('click',function(ev){if(ev.target.closest('[data-back]'))openSheet('shType');});
 
   function gbrHtml(s,i){
-    var src=s._prev||s.gambar;if(!src)return '';
+    var k=s._prev?'image':(s.gambar?kindOf(s.gambar):'');
+    var row='';
+    if(s._lm){
+      row='<div class="lnkrow"><span class="li">'+svg(s._lm)+'</span><input class="oi" type="url" data-lin="'+i+'" inputmode="url" maxlength="500" placeholder="Tempel link '+KIND_LBL[s._lm].toLowerCase()+' (https://…)" value="'+esc(k===s._lm?cleanLink(s.gambar):'')+'" aria-label="Link '+KIND_LBL[s._lm].toLowerCase()+' nomor '+(i+1)+'">'+
+        '<button type="button" class="lb ok" data-lok="'+i+'">Pasang</button><button type="button" class="lb no" data-lno="'+i+'">Batal</button></div>';
+    }
+    if(k==='suara'||k==='video'){
+      return '<div class="lnkbox"><span class="li">'+svg(k)+'</span><div class="gi"><b>Link '+KIND_LBL[k].toLowerCase()+'</b><a href="'+esc(cleanLink(s.gambar))+'" target="_blank" rel="noopener noreferrer">'+esc(cleanLink(s.gambar))+'</a></div>'+
+        '<div class="gb"><button type="button" class="ib" data-lnk="'+k+'" data-i="'+i+'" aria-label="Ganti link '+k+' nomor '+(i+1)+'">'+svg('refresh')+'</button>'+
+        '<button type="button" class="ib del" data-rmimg="'+i+'" aria-label="Hapus link '+k+' nomor '+(i+1)+'">'+svg('trash')+'</button></div></div>'+row;
+    }
+    var src=s._prev||s.gambar;if(!src)return row;
     return '<div class="gbox"><img src="'+esc(src)+'" alt="Gambar soal '+(i+1)+'"><div class="gi"><b>Gambar soal</b>'+(s._blob?fmtKb(s._blob.size)+' · tersimpan saat soal disimpan':'Sudah tersimpan')+'</div>'+
       '<div class="gb"><button type="button" class="ib" data-img="'+i+'" aria-label="Ganti gambar nomor '+(i+1)+'">'+svg('refresh')+'</button>'+
-      '<button type="button" class="ib del" data-rmimg="'+i+'" aria-label="Hapus gambar nomor '+(i+1)+'">'+svg('trash')+'</button></div></div>';
+      '<button type="button" class="ib del" data-rmimg="'+i+'" aria-label="Hapus gambar nomor '+(i+1)+'">'+svg('trash')+'</button></div></div>'+row;
   }
   function renderDraft(){
     $('qList').innerHTML=draft.length?draft.map(function(s,i){
       var h='<div class="qb" data-qi="'+i+'"><div class="qh"><span class="qn">'+(i+1)+'</span>'+
         (s.tipe==='tts'?'<select data-f="arah" aria-label="Arah pertanyaan '+(i+1)+'"><option value="mendatar"'+(s.arah!=='menurun'?' selected':'')+'>Mendatar</option><option value="menurun"'+(s.arah==='menurun'?' selected':'')+'>Menurun</option></select>':'')+
         '<label class="sk">Skor<input data-f="skor" type="number" inputmode="numeric" min="0" max="100" step="1" value="'+esc(s.skor)+'" aria-label="Skor soal '+(i+1)+'"></label>'+
-        '<button type="button" class="ib'+((s._prev||s.gambar)?' has':'')+'" data-img="'+i+'" title="'+((s._prev||s.gambar)?'Ganti gambar':'Tambah gambar')+'" aria-label="'+((s._prev||s.gambar)?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
+        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='suara')?' has':'')+'" data-lnk="suara" data-i="'+i+'" title="Tambah link suara" aria-label="Tambah link suara nomor '+(i+1)+'">'+svg('suara')+'</button>'+
+        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='video')?' has':'')+'" data-lnk="video" data-i="'+i+'" title="Tambah link video" aria-label="Tambah link video nomor '+(i+1)+'">'+svg('video')+'</button>'+
+        '<button type="button" class="ib'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?' has':'')+'" data-img="'+i+'" title="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti gambar':'Tambah gambar')+'" aria-label="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
         '<button type="button" class="ib del" data-rm="'+i+'" aria-label="Hapus nomor '+(i+1)+'">'+svg('trash')+'</button></div>'+
         '<textarea data-f="teks" maxlength="1000" placeholder="'+(s.tipe==='tts'?'Petunjuk / pertanyaan untuk kotak ini…':s.tipe==='bs'?'Tulis pernyataan di sini…':'Tulis pertanyaan di sini…')+'" aria-label="Pertanyaan '+(i+1)+'">'+esc(s.teks)+'</textarea>'+gbrHtml(s,i);
       if(s.tipe==='pg'){
@@ -1506,6 +1565,37 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       s._blob=null;s._prev=null;s.gambar=null;renderDraft();
     }
   });
+  /* ---------- Tambah / ganti link suara & video (disimpan di kolom gambar) ---------- */
+  function pasangLink(i){
+    var s=draft[i];if(!s)return;
+    var inp=$('qList').querySelector('[data-lin="'+i+'"]');if(!inp)return;
+    var v=inp.value.trim();
+    if(!safeLink(v)){toast('Link harus diawali http:// atau https://','err');inp.focus();return;}
+    var kind=s._lm;
+    if(s._prev)URL.revokeObjectURL(s._prev);
+    s._blob=null;s._prev=null;
+    s.gambar=normLink(v,kind);s._lm=null;
+    renderDraft();
+    toast('Link '+KIND_LBL[kind].toLowerCase()+' dipasang. Tersimpan saat soal disimpan.','ok');
+  }
+  $('qList').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-lnk]');
+    if(b){
+      var i=+b.dataset.i,s=draft[i];if(!s)return;
+      var kind=b.dataset.lnk;
+      if(s._lm===kind){s._lm=null;renderDraft();return;}
+      if((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))&&!confirm('Nomor '+(i+1)+' sudah memiliki gambar. Lampiran diganti dengan link '+kind+'?'))return;
+      s._lm=kind;renderDraft();
+      var inp=$('qList').querySelector('[data-lin="'+i+'"]');if(inp)inp.focus();
+      return;
+    }
+    var ok=ev.target.closest('[data-lok]');if(ok){pasangLink(+ok.dataset.lok);return;}
+    var no=ev.target.closest('[data-lno]');if(no){var q=draft[+no.dataset.lno];if(q){q._lm=null;renderDraft();}}
+  });
+  $('qList').addEventListener('keydown',function(ev){
+    var inp=ev.target.closest&&ev.target.closest('[data-lin]');
+    if(inp&&ev.key==='Enter'){ev.preventDefault();pasangLink(+inp.dataset.lin);}
+  });
   fGbr.addEventListener('change',async function(){
     var f=fGbr.files&&fGbr.files[0],s=draft[gbrIdx];if(!f||!s)return;
     if(!/^image\//.test(f.type)){toast('File harus berupa gambar.','err');return;}
@@ -1513,7 +1603,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     try{
       var b=await kompres(f);
       if(s._prev)URL.revokeObjectURL(s._prev);
-      s._blob=b;s._prev=URL.createObjectURL(b);
+      s._blob=b;s._prev=URL.createObjectURL(b);s._lm=null;
       renderDraft();
       toast('Gambar siap ('+fmtKb(b.size)+'). Tersimpan saat soal disimpan.','ok');
     }catch(e){toast(e.message||'Gagal memproses gambar.','err');}
@@ -1562,7 +1652,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var kkmRaw=$('nKkm').value,kkm=/^\d+$/.test(kkmRaw)?Number(kkmRaw):null;
     var materi=$('nMateri').value||'';
     var rec={judul:'',kelas:kelas,materi:materi,kategori:kat,ke:ke,kkm:kkm,bentuk:newTipe,deskripsi:$('nDesk').value.trim(),
-      soal:draft.map(function(s){var c=JSON.parse(JSON.stringify(s,function(k,v){return k==='_blob'||k==='_prev'?undefined:v;}));c._blob=s._blob||null;c.teks=c.teks.trim();return c;})};
+      soal:draft.map(function(s){var c=JSON.parse(JSON.stringify(s,function(k,v){return k==='_blob'||k==='_prev'||k==='_lm'?undefined:v;}));c._blob=s._blob||null;c.teks=c.teks.trim();return c;})};
     rec.judul=katLabel(rec)+(materi?' — '+materi:'');
     var was=editId!==null;
     setBusy(true);
@@ -2060,7 +2150,12 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     tts:'Tulislah jawaban pada kotak yang tersedia, satu huruf untuk setiap kotak, sesuai petunjuk mendatar dan menurun.'
   };
   var naskahBusy=false;
-  function nkImg(s,i){return s.gambar?'<img class="nk-img" alt="Gambar soal '+(i+1)+'" src="'+esc(s.gambar)+'">':'';}
+  function nkImg(s,i){
+    if(!s.gambar)return '';
+    var k=kindOf(s.gambar);
+    if(k==='image')return '<img class="nk-img" alt="Gambar soal '+(i+1)+'" src="'+esc(s.gambar)+'">';
+    return '<div class="nk-lnk"><b>Link '+KIND_LBL[k].toLowerCase()+':</b> '+esc(cleanLink(s.gambar))+'</div>';
+  }
   function nkSoal(s,i){
     var h='<div class="nk-q"><div class="nk-n">'+(i+1)+'.</div><div class="nk-b"><div class="nk-t">'+esc(s.teks)+(s.tipe==='essay'?' <span class="nk-sk">('+esc(s.skor)+' poin)</span>':'')+'</div>'+nkImg(s,i);
     if(s.tipe==='pg'){
