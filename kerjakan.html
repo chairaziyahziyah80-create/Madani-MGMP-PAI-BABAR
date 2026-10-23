@@ -31,12 +31,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .qmed .emb{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
 .qmed .emb iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .qmed .mfail{display:none;margin-top:8px;font-size:12.5px;color:var(--muted)}.qmed.err .mfail{display:block}.qmed .mfail a{color:var(--accent);font-weight:700}
-.qmed .ac{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line)}
-.qmed .apl{flex:none;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-size:16px;display:grid;place-items:center}
-.qmed .aseek{flex:1;min-width:0;accent-color:var(--accent)}
-.qmed .atm{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.qmed .dmask{position:relative;height:64px;overflow:hidden;border-radius:12px;background:#f1f3f4}.qmed .dmask iframe{position:absolute;left:0;bottom:0;width:100%;height:240px;border:0}
-.qmed .ytbox{position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
 .qt{font-size:16.5px;line-height:1.55;white-space:pre-wrap;margin-bottom:16px}
 .op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);transition:.15s}
 .op b{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--track)}
@@ -197,64 +191,16 @@ function embedUrl(u){
     return 'https://drive.google.com/file/d/'+m[1]+'/preview';
   return '';
 }
-function directUrl(u){
-  const m=u.match(/^https?:\/\/(?:www\.)?dropbox\.com\/(s|scl)\/([^?#]+)(\?[^#]*)?/i);
-  if(m){const q=(m[3]||'').replace(/^\?/,'').split('&').filter(x=>x&&!/^dl=/i.test(x));q.push('raw=1');return 'https://www.dropbox.com/'+m[1]+'/'+m[2]+'?'+q.join('&');}
-  return u;
-}
-function ytId(u){let m;
-  if((m=u.match(/^https?:\/\/(?:www\.|m\.)?youtube\.com\/watch\?(?:[^#]*&)?v=([\w-]{6,})/i))||(m=u.match(/^https?:\/\/youtu\.be\/([\w-]{6,})/i))||(m=u.match(/^https?:\/\/(?:www\.|m\.)?youtube\.com\/(?:embed|shorts|live)\/([\w-]{6,})/i)))return m[1];
-  return '';
-}
-function driveId(u){const m=u.match(/^https?:\/\/drive\.google\.com\/file\/d\/([\w-]+)/i)||u.match(/^https?:\/\/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([\w-]+)/i);return m?m[1]:'';}
-/* Suara YouTube: pemutar disembunyikan (hanya tombol putar & bilah waktu) agar gambar/video tidak terlihat siswa */
-let ytp=null,ytTimer=null;
-function ytCleanup(){clearInterval(ytTimer);if(ytp&&ytp.destroy){try{ytp.destroy();}catch(e){}}ytp=null;}
-function ytLoad(cb){
-  if(window.YT&&window.YT.Player)return cb();
-  (window._ytq=window._ytq||[]).push(cb);
-  if(!window._ytl){window._ytl=1;const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';sc.onerror=()=>{const w=document.querySelector('.yta');if(w)w.classList.add('err');};document.head.appendChild(sc);
-    window.onYouTubeIframeAPIReady=()=>{(window._ytq||[]).splice(0).forEach(f=>f());};}
-}
-function initYt(){
-  ytCleanup();
-  const w=document.querySelector('.yta');if(!w)return;
-  const id=w.dataset.yt,btn=w.querySelector('.apl'),sk=w.querySelector('.aseek'),tm=w.querySelector('.atm');
-  let dur=0,drag=false;
-  const fmt=t=>{t=Math.floor(t||0);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
-  ytLoad(()=>{
-    if(!w.isConnected)return;
-    ytp=new YT.Player(w.querySelector('.ytp'),{width:200,height:200,videoId:id,
-      playerVars:{playsinline:1,controls:0,rel:0,disablekb:1,fs:0,modestbranding:1},
-      events:{onReady:()=>{dur=ytp.getDuration();tm.textContent='0:00 / '+fmt(dur);},
-        onStateChange:e=>{btn.textContent=e.data===1?'⏸':'▶';if(e.data===0)sk.value=0;},
-        onError:()=>w.classList.add('err')}});
-    ytTimer=setInterval(()=>{if(!ytp||!ytp.getCurrentTime)return;const c=ytp.getCurrentTime(),d=ytp.getDuration()||dur;if(!drag&&d)sk.value=c/d*100;tm.textContent=fmt(c)+' / '+fmt(d);},500);
-  });
-  btn.onclick=()=>{if(!ytp||!ytp.getPlayerState)return;ytp.getPlayerState()===1?ytp.pauseVideo():ytp.playVideo();};
-  sk.oninput=()=>{drag=true;};
-  sk.onchange=()=>{drag=false;if(ytp&&ytp.seekTo){const d=ytp.getDuration()||dur;ytp.seekTo(sk.value/100*d,true);}};
-}
-function driveFb(el,id){
-  const w=el.parentNode;if(!w||w.dataset.fb)return;w.dataset.fb='1';
-  w.innerHTML='<div class="dmask"><iframe src="https://drive.google.com/file/d/'+id+'/preview" title="Audio soal" allow="autoplay" loading="lazy"></iframe></div>';
-}
 function mediaHtml(src,i){
   const k=kindOf(src);
   if(k==='image')return '<figure class="qimg"><img src="'+esc(src)+'" alt="Gambar soal nomor '+(i+1)+'" decoding="async" onerror="this.parentNode.classList.add(\'err\');this.remove()"></figure>';
-  const u=directUrl(cleanLink(src));
+  const u=cleanLink(src);
   if(!safeLink(u))return '';
   const fb='<p class="mfail">Media tidak dapat diputar di sini. <a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">Buka di tab baru</a></p>';
   const er='onerror="this.parentNode.classList.add(\'err\')"';
-  if(k==='suara'){
-    const yid=ytId(u);
-    if(yid)return '<div class="qmed yta" data-yt="'+esc(yid)+'"><div class="ytbox"><div class="ytp"></div></div><div class="ac"><button type="button" class="apl" aria-label="Putar atau jeda audio">▶</button><input type="range" class="aseek" min="0" max="100" step="0.1" value="0" aria-label="Posisi audio"><span class="atm">0:00</span></div><p class="mfail">Audio tidak dapat diputar di sini. Muat ulang halaman atau hubungi guru.</p></div>';
-    const did=driveId(u);
-    if(did)return '<div class="qmed"><audio controls preload="metadata" playsinline controlsList="nodownload" onerror="driveFb(this,\''+did+'\')" src="https://drive.usercontent.google.com/download?id='+did+'&export=download&confirm=t" aria-label="Audio soal nomor '+(i+1)+'">Browser tidak mendukung audio.</audio></div>';
-  }
+  if(k==='suara')return '<div class="qmed"><audio controls preload="metadata" controlsList="nodownload" '+er+' src="'+esc(u)+'" aria-label="Audio soal nomor '+(i+1)+'">Browser tidak mendukung audio.</audio>'+fb+'</div>';
   const e=embedUrl(u);
-  if(k==='suara')return '<div class="qmed"><audio controls preload="metadata" playsinline controlsList="nodownload" '+er+' src="'+esc(u)+'" aria-label="Audio soal nomor '+(i+1)+'">Browser tidak mendukung audio.</audio>'+fb+'</div>';
-  if(e&&k!=='suara')return '<div class="qmed"><div class="emb"><iframe src="'+esc(e)+'" title="'+(k==='suara'?'Audio':'Video')+' soal nomor '+(i+1)+'" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>'+fb.replace('Media tidak dapat diputar di sini.','Tidak tampil?')+'</div>';
+  if(e)return '<div class="qmed"><div class="emb"><iframe src="'+esc(e)+'" title="Video soal nomor '+(i+1)+'" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>'+fb.replace('Media tidak dapat diputar di sini.','Video tidak tampil?')+'</div>';
   return '<div class="qmed"><video controls playsinline preload="metadata" controlsList="nodownload" '+er+' src="'+esc(u)+'" aria-label="Video soal nomor '+(i+1)+'">Browser tidak mendukung video.</video>'+fb+'</div>';
 }
 function lbl(q){return q.tipe==='pg'?'Pilihan Ganda':q.tipe==='bs'?'Benar / Salah':q.tipe==='tts'?(q.arah==='menurun'?'Menurun':'Mendatar'):'Uraian';}
@@ -268,7 +214,7 @@ function render(){
     h+='<div class="cells">';for(let k=0;k<n;k++)h+='<input class="cell" data-k="'+k+'" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Huruf '+(k+1)+'" value="'+esc(v.charAt(k).trim())+'">';
     h+='</div><p class="hint">'+n+' huruf · '+(q.arah==='menurun'?'menurun':'mendatar')+'</p>';
   }else h+='<textarea maxlength="5000" placeholder="Tulis jawabanmu di sini…" aria-label="Jawaban">'+esc(a||'')+'</textarea><p class="hint" id="cc">'+String(a||'').length+' karakter</p>';
-  ytCleanup();$('qc').innerHTML=h;upd();initYt();
+  $('qc').innerHTML=h;upd();
   const nx=Q[i+1];if(nx&&nx.gambar&&kindOf(nx.gambar)==='image'){const im=new Image();im.src=nx.gambar;}
 }
 function upd(){
