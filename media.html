@@ -272,6 +272,9 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
 .hl{display:flex;align-items:center;gap:8px;min-width:0}
 .hl h2{min-width:0}
 .hl .xb{flex:none}
+.pick{display:flex;flex-direction:column;gap:8px}
+.pick .btn{width:100%;justify-content:flex-start}
+.btn.dng{color:#c62828;background:rgba(255,69,58,.12)}
 .vtabs{flex:none;display:flex;gap:6px;padding:8px 12px;background:rgba(255,255,255,.06)}
 .vtabs button{padding:7px 18px;border-radius:99px;font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,.12)}
 .vtabs button.on{background:#fff;color:#0b3d24}
@@ -490,6 +493,38 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   </form>
 </div>
 
+<!-- Sheet: pilih kelas (media yang sama ada di beberapa kelas) -->
+<div class="sh" id="shPick" style="--sw:480px" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sh-h"><h2 id="pickTitle">Pilih Kelas</h2><button class="xb" type="button" data-close aria-label="Tutup" data-i="x"></button></div>
+  <div class="sh-b">
+    <p class="sub" id="pickSub"></p>
+    <div class="pick" id="pickList"></div>
+  </div>
+</div>
+<!-- Sheet: duplikat media ke kelas lain -->
+<div class="sh" id="shDup" style="--sw:640px" role="dialog" aria-modal="true" aria-labelledby="dupTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sh-h"><h2 id="dupTitle">Duplikat Media</h2><button class="xb" type="button" data-close aria-label="Tutup" data-i="x"></button></div>
+  <form class="sh-b" id="frmDup" novalidate autocomplete="off">
+    <p class="sub" id="dupSub"></p>
+    <div class="form">
+      <div class="fld"><label for="dSumber">Disalin dari ID</label><input id="dSumber" readonly></div>
+      <div class="fld"><label for="dAsal">Kelas Asal</label><input id="dAsal" readonly></div>
+      <div class="fld full"><label for="dKelas">Kelas Tujuan <em>*</em></label><select id="dKelas" required></select></div>
+      <div class="fld full"><label for="dJudul">Judul Media <em>*</em></label><input id="dJudul" required maxlength="200"></div>
+      <div class="fld full"><label for="dMateri">Materi Terkait</label><select id="dMateri" disabled><option value="">— Pilih kelas tujuan dulu —</option></select><span class="hint" id="dHint" hidden></span></div>
+      <div class="fld full" id="dzPptx" hidden><label for="dlPptx">Link PPTX <em>*</em></label><input id="dlPptx" type="url" inputmode="url" maxlength="1000" placeholder="https://docs.google.com/presentation/d/…"></div>
+      <div class="fld full" id="dzPdf" hidden><label for="dlPdf">Link PDF <em>*</em></label><input id="dlPdf" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/file/d/…"></div>
+      <div class="fld full" id="dzVideo" hidden><label for="dlVideo">Link Video <em>*</em></label><input id="dlVideo" type="url" inputmode="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=…"></div>
+      <div class="fld full"><label for="dDesk">Deskripsi</label><textarea id="dDesk" maxlength="300" placeholder="Penjelasan singkat untuk siswa (opsional)"></textarea></div>
+      <div class="actions">
+        <button class="btn pri" type="submit" id="dSave"><span id="dSaveTxt">Simpan</span></button>
+        <button class="btn sec2" type="button" data-close>Batal</button>
+      </div>
+    </div>
+  </form>
+</div>
 <!-- Sheet: identitas siswa -->
 <div class="sh" id="shId" style="--sw:520px" role="dialog" aria-modal="true" aria-labelledby="idTitle">
   <div class="grab" aria-hidden="true"></div>
@@ -552,6 +587,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   var P={
     home:'<path d="M3 11l9-7.5 9 7.5M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
+    dup:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
     history:'<path d="M3.5 12a8.5 8.5 0 102.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2"/>',
     edit:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4zM13.5 6.5l4 4"/>',
     trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M9 7V4h6v3"/>',
@@ -644,6 +680,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     }catch(e){kelasList=[];toast('Gagal memuat daftar kelas dari Rombel: '+(e.message||e),'err');}
     fillKelasSel($('iKelas'),$('iKelas').value,'— Pilih kelas —');
     fillKelasSel($('nKelas'),$('nKelas').value,'— Pilih kelas —');
+    fillKelasSel($('dKelas'),$('dKelas').value,'— Pilih kelas tujuan —');
   }
   async function loadMateri(){
     try{
@@ -692,6 +729,28 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
 
   /* ---------- Kartu media ---------- */
   var curKelas='';   /* tab kelas aktif ('' = Semua) */
+  /* Media dengan judul, bentuk, dan link yang sama tetapi kelasnya berbeda ditampilkan sebagai SATU kartu
+     dengan keterangan semua kelasnya. Jika link-nya berbeda, kartu tetap terpisah agar isi yang dibuka tidak tertukar. */
+  var viewGroups={};   /* id baris wakil -> daftar baris dalam kartu itu (diisi saat render) */
+  function gKey(m){return [(m.judul||'').trim().replace(/\s+/g,' ').toLowerCase(),m.bentuk||'',m.link_pptx||'',m.link_pdf||'',m.link_video||''].join('\u0001');}
+  function groupRows(list){
+    var map={},out=[];
+    list.forEach(function(m){var k=gKey(m);if(!map[k]){map[k]={items:[]};out.push(map[k]);}map[k].items.push(m);});
+    out.forEach(function(g){g.items.sort(function(a,b){return natSort(a.kelas||'',b.kelas||'');});g.rep=repFor(g);});
+    return out;
+  }
+  /* baris wakil: kelas siswa yang sedang belajar bila ada, selain itu kelas pertama */
+  function repFor(g){
+    var k=ident&&ident.kelas;
+    return (k&&g.items.filter(function(i){return i.kelas===k;})[0])||g.items[0];
+  }
+  function uniqKelas(items){
+    var seen={};
+    return items.map(function(i){return i.kelas||'';}).filter(function(k){if(!k||seen[k])return false;seen[k]=1;return true;});
+  }
+  function kelasText(m){return uniqKelas(viewGroups[m.id]||[m]).join(', ');}
+  function kelasChips(items){return uniqKelas(items).map(function(k){return '<span class="kls">'+esc(k)+'</span>';}).join('');}
+  function sameMateri(items){return items.every(function(i){return (i.bahan_ajar||'')===(items[0].bahan_ajar||'');});}
   function fillFilter(){
     var ks=[],cnt={};
     rows.forEach(function(r){if(!r.kelas)return;if(ks.indexOf(r.kelas)<0)ks.push(r.kelas);cnt[r.kelas]=(cnt[r.kelas]||0)+1;});
@@ -700,7 +759,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     function tab(v,label,n){
       return '<button type="button" data-k="'+esc(v)+'" class="'+(curKelas===v?'on':'')+'" aria-pressed="'+(curKelas===v)+'">'+esc(label)+'<small>'+n+'</small></button>';
     }
-    $('kTabs').innerHTML=tab('','Semua',rows.length)+ks.map(function(k){return tab(k,k,cnt[k]);}).join('');
+    $('kTabs').innerHTML=tab('','Semua',groupRows(rows).length)+ks.map(function(k){return tab(k,k,cnt[k]);}).join('');
     $('kTabs').hidden=!ks.length;
     return ks.length;
   }
@@ -711,15 +770,16 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var k=f.filter(function(x){return x.kelas===m.kelas;})[0]||f[0];
     return k?k.link_buku:'';
   }
-  function cardHtml(m){
-    var b=BENTUK[m.bentuk]?m.bentuk:'pdf',img=thumbUrl(m);
+  function cardHtml(g){
+    var m=g.rep,items=g.items,b=BENTUK[m.bentuk]?m.bentuk:'pdf',img=thumbUrl(m);
     return '<div class="mc" role="button" tabindex="0" data-id="'+m.id+'" aria-label="Buka media '+esc(m.judul)+'">'+
       '<div class="thumb" style="background:'+GRAD[b]+'"><span class="ti">'+svg(ICON[b])+'</span>'+
         (img?'<img loading="lazy" alt="" src="'+esc(img)+'" referrerpolicy="no-referrer">':'')+
         '<span class="badge">'+esc(BENTUK[b])+'</span></div>'+
       '<div class="mb"><h3>'+esc(m.judul)+'</h3>'+(m.deskripsi?'<p>'+esc(m.deskripsi)+'</p>':'')+
-        '<div class="mf"><div class="meta"><span class="kls">'+esc(m.kelas)+'</span>'+(m.bahan_ajar?(materiLink(m)?'<a class="kls mt" href="'+esc(materiLink(m))+'" target="_blank" rel="noopener noreferrer" title="Buka materi \''+esc(m.bahan_ajar)+'\' di tab baru">'+esc(m.bahan_ajar)+'</a>':'<span class="kls mt" title="'+esc(m.bahan_ajar)+'">'+esc(m.bahan_ajar)+'</span>'):'')+'</div>'+
+        '<div class="mf"><div class="meta">'+kelasChips(items)+(m.bahan_ajar&&sameMateri(items)?(materiLink(m)?'<a class="kls mt" href="'+esc(materiLink(m))+'" target="_blank" rel="noopener noreferrer" title="Buka materi \''+esc(m.bahan_ajar)+'\' di tab baru">'+esc(m.bahan_ajar)+'</a>':'<span class="kls mt" title="'+esc(m.bahan_ajar)+'">'+esc(m.bahan_ajar)+'</span>'):'')+'</div>'+
         '<div class="ab"><button type="button" class="ib" data-act="edit" data-id="'+m.id+'" aria-label="Ubah '+esc(m.judul)+'">'+svg('edit')+'</button>'+
+        '<button type="button" class="ib" data-act="dup" data-id="'+m.id+'" title="Duplikat ke kelas lain" aria-label="Duplikat '+esc(m.judul)+'">'+svg('dup')+'</button>'+
         '<button type="button" class="ib del" data-act="del" data-id="'+m.id+'" aria-label="Hapus '+esc(m.judul)+'">'+svg('trash')+'</button></div></div>'+
       '</div></div>';
   }
@@ -729,9 +789,11 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       return (!fk||r.kelas===fk)&&(!fb||r.bentuk===fb)&&
         (!q||(r.judul||'').toLowerCase().indexOf(q)>-1||(r.deskripsi||'').toLowerCase().indexOf(q)>-1||(r.bahan_ajar||'').toLowerCase().indexOf(q)>-1);
     });
-    $('grid').innerHTML=list.length?list.map(cardHtml).join(''):
+    var gs=groupRows(list);viewGroups={};
+    gs.forEach(function(g){viewGroups[g.rep.id]=g.items;});
+    $('grid').innerHTML=gs.length?gs.map(cardHtml).join(''):
       '<div class="empty">'+(rows.length?'Tidak ada media yang cocok.':'Belum ada media. Tekan Tambah Media di menu bawah untuk membuat yang pertama.')+'</div>';
-    $('stMedia').textContent=rows.length+' media';
+    $('stMedia').textContent=groupRows(rows).length+' media';
   }
   /* gambar sampul yang gagal dimuat -> tampilkan ikon */
   $('grid').addEventListener('error',function(ev){if(ev.target&&ev.target.tagName==='IMG')ev.target.remove();},true);
@@ -763,8 +825,14 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var b=ev.target.closest('button[data-act]');
     if(b){
       ev.stopPropagation();var id=+b.dataset.id;
-      if(b.dataset.act==='edit'){var r=rows.find(function(x){return x.id===id;});if(r)openNew(BENTUK[r.bentuk]?r.bentuk:'pdf',r);}
-      else delMedia(id);
+      var items=viewGroups[id]||[],multi=items.length>1;
+      if(b.dataset.act==='edit'){
+        if(multi)pickKelas('edit',items);
+        else{var r=rows.find(function(x){return x.id===id;});if(r)openNew(BENTUK[r.bentuk]?r.bentuk:'pdf',r);}
+      }
+      else if(b.dataset.act==='dup')openDup(id);
+      else if(multi)pickKelas('del',items);
+      else delMedia([id]);
       return;
     }
     if(ev.target.closest('a.mt'))return; /* materi terkait: buka di tab baru (default browser), bukan viewer */
@@ -774,17 +842,40 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList.contains('mc')){ev.preventDefault();openMedia(+ev.target.dataset.id);}
   });
 
-  async function delMedia(id){
-    var r=rows.find(function(x){return x.id===id;});if(!r||busy)return;
-    if(!confirm('Hapus media "'+r.judul+'"?\nRiwayat belajar siswa untuk media ini tetap tersimpan.'))return;
+  async function delMedia(ids){
+    var rs=ids.map(function(id){return rows.find(function(x){return x.id===id;});}).filter(Boolean);
+    if(!rs.length||busy)return;
+    if(!confirm('Hapus media "'+rs[0].judul+'" dari kelas '+uniqKelas(rs).join(', ')+'?\nRiwayat belajar siswa untuk media ini tetap tersimpan.'))return;
     try{
-      var d=await db.from(T_MEDIA).delete().eq('id',id);
+      var d=rs.length>1?await db.from(T_MEDIA).delete().in('id',rs.map(function(x){return x.id;})):await db.from(T_MEDIA).delete().eq('id',rs[0].id);
       if(d.error)throw d.error;
       await load();
       toast('Media berhasil dihapus.','ok');
     }catch(e){toast('Gagal menghapus: '+(e.message||e),'err');}
   }
 
+  /* media yang sama ada di beberapa kelas: pilih kelas mana yang diubah / dihapus */
+  var pickCtx=null;
+  function pickKelas(act,items){
+    pickCtx={act:act,items:items};
+    var del=act==='del';
+    $('pickTitle').textContent=del?'Hapus Media':'Ubah Media';
+    $('pickSub').textContent='Media "'+items[0].judul+'" ada di '+items.length+' kelas. Pilih kelas yang ingin '+(del?'dihapus.':'diubah.');
+    $('pickList').innerHTML=items.map(function(m){return '<button type="button" class="btn sec2" data-pk="'+m.id+'">'+esc(m.kelas)+'</button>';}).join('')+
+      (del?'<button type="button" class="btn sec2 dng" data-pk="all">Hapus dari semua kelas ('+items.length+')</button>':'');
+    openSheet('shPick');
+  }
+  $('pickList').addEventListener('click',function(ev){
+    var b=ev.target.closest('button[data-pk]');if(!b||!pickCtx)return;
+    var c=pickCtx;pickCtx=null;
+    if(c.act==='edit'){
+      var r=rows.find(function(x){return x.id===+b.dataset.pk;});
+      if(r)openNew(BENTUK[r.bentuk]?r.bentuk:'pdf',r);
+      return;
+    }
+    closeSheets();
+    delMedia(b.dataset.pk==='all'?c.items.map(function(m){return m.id;}):[+b.dataset.pk]);
+  });
   /* ---------- Tambah / ubah media: pilih bentuk -> form berisi link ---------- */
   var TYPES={
     pptx:{label:'PPTX',zones:['pptx'],sub:'Tempel link presentasi PowerPoint atau Google Slides.'},
@@ -916,6 +1007,65 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     setBusy(false);$('nSaveTxt').textContent=wasEdit?'Perbarui':'Simpan';
   });
 
+  /* ---------- Duplikat media ke kelas lain ---------- */
+  var dupSrc=null;
+  function dzIds(k){return {box:'d'+ZONES[k].box,input:'d'+ZONES[k].input};}
+  /* materi terkait mengikuti kelas tujuan; materi asal dipertahankan hanya bila ada juga di kelas tujuan */
+  function fillDupMateri(kelas){
+    var sel=$('dMateri'),src=dupSrc&&dupSrc.bahan_ajar?dupSrc.bahan_ajar:'',h=$('dHint');
+    h.hidden=true;h.textContent='';
+    if(!kelas){sel.innerHTML='<option value="">— Pilih kelas tujuan dulu —</option>';sel.disabled=true;return;}
+    sel.disabled=false;
+    var has=materiRows.some(function(m){return m.kelas===kelas&&m.nama_bahan_ajar===src;});
+    fillMateri(kelas,has?src:'',sel);
+    if(src&&!has){h.textContent='Materi "'+src+'" tidak ada di kelas '+kelas+'. Pilih materi lain bila perlu.';h.hidden=false;}
+  }
+  function openDup(id){
+    var r=rows.find(function(x){return x.id===id;});if(!r||busy)return;
+    var b=BENTUK[r.bentuk]?r.bentuk:'pdf',cfg=TYPES[b];
+    dupSrc=r;
+    $('dSumber').value=r.id;$('dAsal').value=kelasText(r)||r.kelas||'';
+    $('dupSub').textContent='Ganti kelas tujuan, lalu simpan. Data akan dimasukkan sebagai media '+cfg.label+' baru dan data asli tidak berubah.';
+    fillKelasSel($('dKelas'),'','— Pilih kelas tujuan —');
+    $('dJudul').value=r.judul||'';
+    fillDupMateri('');
+    Object.keys(ZONES).forEach(function(k){
+      var z=ZONES[k],d=dzIds(k);
+      $(d.box).hidden=cfg.zones.indexOf(k)<0;
+      $(d.input).value=r[z.col]||'';
+    });
+    $('dDesk').value=r.deskripsi||'';
+    openSheet('shDup');
+    setTimeout(function(){$('dKelas').focus();},320);
+  }
+  $('dKelas').addEventListener('change',function(){fillDupMateri(this.value);});
+  $('frmDup').addEventListener('submit',async function(ev){
+    ev.preventDefault();if(busy||!dupSrc)return;
+    var r=dupSrc,b=BENTUK[r.bentuk]?r.bentuk:'pdf',cfg=TYPES[b];
+    var kelas=$('dKelas').value.trim(),judul=$('dJudul').value.trim().replace(/\s+/g,' ');
+    if(!kelas){toast('Kelas tujuan wajib dipilih.','err');$('dKelas').focus();return;}
+    if(!judul){toast('Judul Media wajib diisi.','err');$('dJudul').focus();return;}
+    var row={judul:judul,kelas:kelas,bahan_ajar:$('dMateri').value||null,bentuk:b,
+      link_pptx:null,link_pdf:null,link_video:null,deskripsi:$('dDesk').value.trim()||null};
+    for(var i=0;i<cfg.zones.length;i++){
+      var z=ZONES[cfg.zones[i]],inp=$(dzIds(cfg.zones[i]).input),v=inp.value.trim();
+      if(!v){toast('Link '+z.name+' wajib diisi.','err');inp.focus();return;}
+      if(!isUrl(v)){toast('Link '+z.name+' harus diawali http:// atau https://','err');inp.focus();return;}
+      row[z.col]=v;
+    }
+    if(rows.some(function(x){return x.kelas===kelas&&(x.judul||'').trim().toLowerCase()===judul.toLowerCase();})){
+      toast('Media dengan judul yang sama sudah ada di kelas '+kelas+'.','err');return;
+    }
+    busy=true;$('dSave').disabled=true;$('dSaveTxt').textContent='Menyimpan…';
+    try{
+      var res=await db.from(T_MEDIA).insert(row).select().single();
+      if(res.error)throw res.error;
+      await load();
+      closeSheets();
+      toast('Media berhasil diduplikat ke kelas '+kelas+'.','ok');
+    }catch(e){toast('Gagal menduplikat: '+(e.message||e),'err');}
+    busy=false;$('dSave').disabled=false;$('dSaveTxt').textContent='Simpan';
+  });
   /* ---------- Identitas siswa ---------- */
   async function loadNames(kelas){
     var dl=$('namaList');dl.innerHTML='';
@@ -996,7 +1146,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var parts=partsOf(m);
     cur={m:m,log:log&&!!ident,id:null,acc:0,last:Date.now(),timer:null,p:null,part:parts[0]};
     $('vTitle').textContent=m.judul;
-    $('vSub').textContent=(m.kelas||'')+(cur.log?' · belajar sebagai '+ident.nama:' · tidak dicatat');
+    $('vSub').textContent=(kelasText(m)||m.kelas||'')+(cur.log?' · belajar sebagai '+ident.nama:' · tidak dicatat');
     $('vWho').style.display=cur.log?'':'none';
     $('vTabs').hidden=parts.length<2;
     showPart(parts[0]);
