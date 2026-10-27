@@ -353,36 +353,6 @@ body.lock{overflow:hidden}
     </div>
   </div>
 
-  <form id="frm" novalidate autocomplete="off">
-    <section class="panel box" id="card">
-      <h2 id="formTitle">Tambah Bahan Ajar</h2>
-      <p class="sub">Isi data dan tempel link buku, lalu tekan Simpan. Pilih ikon pensil pada tabel untuk mengubah data.</p>
-      <div class="form">
-        <div class="fld"><label for="id">ID</label><input id="id" value="Otomatis" readonly></div>
-        <div class="fld"><label for="kelas">Kelas <em>*</em></label>
-          <select id="kelas" required><option value="">Memuat kelas…</option></select>
-        </div>
-        <div class="fld full"><label for="nama">Nama Bahan Ajar <em>*</em></label><input id="nama" required maxlength="200" placeholder="Contoh: Buku Siswa PAI dan Budi Pekerti"></div>
-        <div class="fld full"><label for="link">Link Buku <em>*</em></label><input id="link" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/…"></div>
-        <div class="fld full"><label>Upload Cover <span style="font-weight:500">(opsional)</span></label>
-          <div class="cvr">
-            <div class="pv" id="cvPv"></div>
-            <div class="side">
-              <div class="fn" id="cvFn">Belum ada cover. Gambar otomatis dikompres hingga maksimal 20 KB.</div>
-              <div class="row">
-                <button type="button" class="btn sec2 sm" id="cvPick">Pilih Cover</button>
-                <button type="button" class="btn sec2 sm" id="cvDel" hidden>Hapus Cover</button>
-              </div>
-            </div>
-          </div>
-          <input type="file" id="cvFile" accept="image/*" hidden>
-        </div>
-      </div>
-    </section>
-  </form>
-
-  <div class="gap"></div>
-
   <section class="panel box">
     <div class="listhead">
       <div><h2>Daftar Bahan Ajar</h2></div>
@@ -401,6 +371,39 @@ body.lock{overflow:hidden}
 </main>
 
 <div class="bd" id="bd"></div>
+
+<!-- Modal: tambah / ubah bahan ajar -->
+<div class="sh" id="shForm" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+  <div class="sh-h"><h2 id="formTitle">Tambah Bahan Ajar</h2><button class="xb" type="button" data-close aria-label="Tutup" data-i="x"></button></div>
+  <form class="sh-b" id="frm" novalidate autocomplete="off">
+    <p class="sub" id="formSub">Isi data dan tempel link buku, lalu tekan Simpan.</p>
+    <div class="form">
+      <div class="fld"><label for="id">ID</label><input id="id" value="Otomatis" readonly></div>
+      <div class="fld"><label for="kelas">Kelas <em>*</em></label>
+        <select id="kelas" required><option value="">Memuat kelas…</option></select>
+      </div>
+      <div class="fld full"><label for="nama">Nama Bahan Ajar <em>*</em></label><input id="nama" required maxlength="200" placeholder="Contoh: Buku Siswa PAI dan Budi Pekerti"></div>
+      <div class="fld full"><label for="link">Link Buku <em>*</em></label><input id="link" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/…"></div>
+      <div class="fld full"><label>Upload Cover <span style="font-weight:500">(opsional)</span></label>
+        <div class="cvr">
+          <div class="pv" id="cvPv"></div>
+          <div class="side">
+            <div class="fn" id="cvFn">Belum ada cover. Gambar otomatis dikompres hingga maksimal 20 KB.</div>
+            <div class="row">
+              <button type="button" class="btn sec2 sm" id="cvPick">Pilih Cover</button>
+              <button type="button" class="btn sec2 sm" id="cvDel" hidden>Hapus Cover</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="cvFile" accept="image/*" hidden>
+      </div>
+      <div class="actions">
+        <button class="btn pri" type="submit" id="bSave"><span id="bSaveTxt">Simpan</span></button>
+        <button class="btn sec2" type="button" data-close>Batal</button>
+      </div>
+    </div>
+  </form>
+</div>
 
 <!-- Modal: duplikat bahan ajar ke kelas lain -->
 <div class="sh" id="shDup" role="dialog" aria-modal="true" aria-labelledby="dupTitle">
@@ -427,7 +430,6 @@ body.lock{overflow:hidden}
 <div class="dock">
   <nav aria-label="Menu utama">
     <a class="d" id="btnHome" data-tip="Beranda" aria-label="Beranda" href="adminguru.html"><span class="ic" style="background:linear-gradient(160deg,#2fd283,#0b7a47)" data-i="home"></span>Beranda</a>
-    <button class="d" id="bSave" data-tip="Simpan" aria-label="Simpan" type="submit" form="frm"><span class="ic" style="background:linear-gradient(160deg,#60a5fa,#1d4ed8)" data-i="save"></span><span id="bSaveTxt">Simpan</span></button>
     <button class="d" id="bNew" data-tip="Baru" aria-label="Baru" type="button"><span class="ic" style="background:linear-gradient(160deg,#a78bfa,#6d28d9)" data-i="plus"></span>Baru</button>
     <button class="d" id="bRefresh" data-tip="Refresh" aria-label="Refresh" type="button"><span class="ic" style="background:linear-gradient(160deg,#fb923c,#c2410c)" data-i="refresh"></span>Refresh</button>
   </nav>
@@ -590,6 +592,7 @@ body.lock{overflow:hidden}
     editId=null;
     $('id').value='Otomatis';fillKelas('');$('nama').value='';$('link').value='';cvReset('');
     $('formTitle').textContent='Tambah Bahan Ajar';
+    $('formSub').textContent='Isi data dan tempel link buku, lalu tekan Simpan.';
     $('bSaveTxt').textContent='Simpan';
     render();
   }
@@ -598,10 +601,11 @@ body.lock{overflow:hidden}
     editId=id;
     $('id').value=r.id;fillKelas(r.kelas||'');$('nama').value=r.nama_bahan_ajar||'';$('link').value=r.link_buku||'';cvReset(r.cover||'');
     $('formTitle').textContent='Ubah Bahan Ajar';
+    $('formSub').textContent='Ubah data lalu tekan Perbarui.';
     $('bSaveTxt').textContent='Perbarui';
     render();
-    window.scrollTo({top:0,behavior:'smooth'});
-    $('nama').focus();
+    openSheet('shForm');
+    $('nama').focus({preventScroll:true});
   }
 
   /* ---------- Tabel ---------- */
@@ -619,7 +623,7 @@ body.lock{overflow:hidden}
       return (!fk||r.kelas===fk)&&(!q||(r.nama_bahan_ajar||'').toLowerCase().indexOf(q)>-1||(r.kelas||'').toLowerCase().indexOf(q)>-1);
     });
     var tb=$('tb');
-    if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">'+(rows.length?'Tidak ada bahan ajar yang cocok.':'Belum ada bahan ajar. Isi formulir di atas untuk menambahkan.')+'</td></tr>';}
+    if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">'+(rows.length?'Tidak ada bahan ajar yang cocok.':'Belum ada bahan ajar. Tekan Baru untuk menambahkan.')+'</td></tr>';}
     else{
       tb.innerHTML=list.map(function(r){
         var href=isUrl(r.link_buku)?esc(r.link_buku):'#';
@@ -643,7 +647,7 @@ body.lock{overflow:hidden}
       if(r.error)throw r.error;
       rows=r.data||[];
       $('stKelas').textContent=fillFilter()+' kelas';
-      if(editId!==null&&!rows.some(function(x){return x.id===editId;}))resetForm();
+      if(editId!==null&&!rows.some(function(x){return x.id===editId;}))closeSheet(true);
       render();
       setBusy(false);return true;
     }catch(e){
@@ -688,7 +692,7 @@ body.lock{overflow:hidden}
       /* cover lama dibersihkan setelah data baru tersimpan */
       if(oldCover&&(cv.blob||cv.removed))await dropCoverFile(oldCover,oldId);
       await load();
-      resetForm();
+      closeSheet(true);
       toast(wasEdit?'Data berhasil diperbarui.':'Data berhasil ditambahkan.','ok');
     }catch(e){
       if(newPath){try{await db.storage.from(BUCKET).remove([newPath]);}catch(_){}}
@@ -730,16 +734,37 @@ body.lock{overflow:hidden}
     $('dKelas').innerHTML='<option value="">'+(names.length?'— Pilih kelas tujuan —':'Belum ada data di halaman Rombel')+'</option>'+
       names.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
     $('dKelas').value='';
-    $('bd').classList.add('open');$('shDup').classList.add('open');syncLock();
+    openSheet('shDup');
     setTimeout(function(){$('dKelas').focus();},260);
   }
-  function closeDup(){
-    if(busy)return;
-    $('shDup').classList.remove('open');$('bd').classList.remove('open');syncLock();dupSrc=null;
+  /* buka/tutup modal (form & duplikat berbagi backdrop yang sama) */
+  var lastFocus=null;
+  function openSheet(id){
+    lastFocus=document.activeElement;
+    $('bd').classList.add('open');$(id).classList.add('open');syncLock();
   }
-  $('bd').addEventListener('click',closeDup);
-  document.addEventListener('click',function(ev){if(ev.target.closest('[data-close]'))closeDup();});
-  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&$('shDup').classList.contains('open'))closeDup();});
+  function closeSheet(force){
+    if(busy&&!force)return;
+    var o=document.querySelector('.sh.open');if(!o)return;
+    o.classList.remove('open');$('bd').classList.remove('open');syncLock();
+    if(o.id==='shForm'){editId=null;render();} /* hapus sorotan baris yang sedang diubah */
+    else dupSrc=null;
+    if(lastFocus&&document.contains(lastFocus)&&lastFocus.focus)lastFocus.focus({preventScroll:true});
+    lastFocus=null;
+  }
+  $('bd').addEventListener('click',function(){closeSheet();});
+  document.addEventListener('click',function(ev){if(ev.target.closest('[data-close]'))closeSheet();});
+  document.addEventListener('keydown',function(ev){
+    var o=document.querySelector('.sh.open');if(!o)return;
+    if(ev.key==='Escape'){ev.preventDefault();closeSheet();return;}
+    if(ev.key!=='Tab')return;
+    var f=[].filter.call(o.querySelectorAll('button,select,input,textarea'),function(el){return !el.disabled&&!el.hidden&&el.type!=='file';});
+    if(!f.length)return;
+    var a=f[0],z=f[f.length-1],cur=document.activeElement;
+    if(!o.contains(cur)){ev.preventDefault();a.focus();}
+    else if(ev.shiftKey&&cur===a){ev.preventDefault();z.focus();}
+    else if(!ev.shiftKey&&cur===z){ev.preventDefault();a.focus();}
+  });
   $('frmDup').addEventListener('submit',async function(ev){
     ev.preventDefault();if(busy||!dupSrc)return;
     var kelas=$('dKelas').value.trim().replace(/\s+/g,' ');
@@ -756,7 +781,7 @@ body.lock{overflow:hidden}
     try{
       var res=await db.from(TABLE).insert({nama_bahan_ajar:nama,kelas:kelas,link_buku:link,cover:dupSrc.cover||null}).select().single();
       if(res.error)throw res.error;
-      busy=false;closeDup();busy=true;
+      closeSheet(true);
       await load();
       toast('Bahan ajar berhasil diduplikat ke kelas '+kelas+'.','ok');
     }catch(e){toast('Gagal menduplikat: '+(e.message||e),'err');}
@@ -765,7 +790,7 @@ body.lock{overflow:hidden}
 
   $('q').addEventListener('input',render);
   $('fKelas').addEventListener('change',render);
-  $('bNew').addEventListener('click',function(){resetForm();$('nama').focus();});
+  $('bNew').addEventListener('click',function(){resetForm();openSheet('shForm');$('nama').focus({preventScroll:true});});
   $('bRefresh').addEventListener('click',function(){Promise.all([load(),loadKelas()]).then(function(a){if(a[0])toast('Data terbaru ditampilkan.','ok');});});
 
   cvPaint();
