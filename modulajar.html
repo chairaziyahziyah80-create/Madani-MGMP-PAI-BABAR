@@ -174,6 +174,40 @@ td.act,th.act{text-align:right;width:1%}
 .ib.del:hover{background:rgba(255,69,58,.14);color:var(--red)}
 .ib svg{width:18px;height:18px}
 .empty{padding:28px 14px;text-align:center;color:var(--muted);font-size:14px}
+/* Tooltip ikon aksi tabel (gaya sama dengan tombol footer: teks putih, latar hitam) */
+.ib[data-tip]{position:relative}
+.ib[data-tip]::after,.ib[data-tip]::before{position:absolute;left:50%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s,transform .15s;z-index:5}
+.ib[data-tip]::after{content:attr(data-tip);bottom:calc(100% + 9px);transform:translate(-50%,4px);padding:5px 10px;border-radius:8px;background:#000;color:#fff;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.ib[data-tip]::before{content:"";bottom:calc(100% + 4px);transform:translate(-50%,4px);border-style:solid;border-width:5px 5px 0;border-color:#000 transparent transparent}
+.ib[data-tip]:focus-visible::after,.ib[data-tip]:focus-visible::before{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media (hover:hover){.ib[data-tip]:hover::after,.ib[data-tip]:hover::before{opacity:1;visibility:visible;transform:translate(-50%,0)}}
+/* layar sempit: gelembung rata kanan agar tidak terpotong tepi tabel */
+@media (max-width:640px){
+  .ib[data-tip]::after{left:auto;right:-6px;transform:translateY(4px)}
+  .ib[data-tip]:focus-visible::after{transform:translateY(0)}
+}
+@media (max-width:640px) and (hover:hover){.ib[data-tip]:hover::after{transform:translateY(0)}}
+
+/* ===== Modal Duplikat ===== */
+[hidden]{display:none!important}
+body.lock{overflow:hidden}
+.bd{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.38);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s}
+.bd.open{opacity:1;visibility:visible;transition:opacity .25s}
+.sh{position:fixed;left:50%;top:50%;z-index:41;width:min(var(--sw,560px),calc(100% - 24px));max-height:88vh;max-height:88dvh;display:flex;flex-direction:column;border-radius:22px;
+  background:rgba(255,255,255,.95);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);
+  box-shadow:0 24px 70px rgba(20,60,40,.35),0 0 0 .5px rgba(0,0,0,.14);
+  opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.96);
+  transition:transform .25s cubic-bezier(.2,.9,.3,1),opacity .2s,visibility 0s linear .25s}
+.sh.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:transform .25s cubic-bezier(.2,.9,.3,1),opacity .2s}
+.sh-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px 6px;flex:none}
+.sh-h h2{font-size:20px;letter-spacing:-.01em}
+.xb{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--track);color:var(--muted)}
+.xb svg{width:16px;height:16px}
+.sh-b{padding:4px 20px 22px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sh-b .sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+@media (max-width:520px){.sh{width:calc(100% - 16px);border-radius:18px}.sh-h{padding:14px 14px 4px}.sh-h h2{font-size:17px}.sh-b{padding:4px 14px 16px}}
+@media (prefers-reduced-motion:reduce){.sh,.bd{transition:none!important}}
+
 /* ===== Modal Tambah/Ubah ===== */
 .mback{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
@@ -358,6 +392,26 @@ html.mlock{overflow:hidden}
   </form>
 </div>
 
+<!-- Modal: duplikat modul ajar ke kelas lain -->
+<div class="bd" id="bd"></div>
+<div class="sh" id="shDup" role="dialog" aria-modal="true" aria-labelledby="dupTitle">
+  <div class="sh-h"><h2 id="dupTitle">Duplikat Modul Ajar</h2><button class="xb" type="button" data-close aria-label="Tutup" data-i="close"></button></div>
+  <form class="sh-b" id="frmDup" novalidate autocomplete="off">
+    <p class="sub">Ganti kelas tujuan, lalu simpan. Data akan dimasukkan sebagai modul ajar baru dan data asli tidak berubah.</p>
+    <div class="form">
+      <div class="fld"><label for="dSumber">Disalin dari ID</label><input id="dSumber" readonly></div>
+      <div class="fld"><label for="dAsal">Kelas Asal</label><input id="dAsal" readonly></div>
+      <div class="fld full"><label for="dKelas">Kelas Tujuan <em>*</em></label><select id="dKelas" required></select></div>
+      <div class="fld full"><label for="dNama">Nama Modul Ajar <em>*</em></label><input id="dNama" required maxlength="200"></div>
+      <div class="fld full"><label for="dLink">Link Modul <em>*</em></label><input id="dLink" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/…"></div>
+      <div class="actions">
+        <button class="btn pri" type="submit" id="dSave"><span id="dSaveTxt">Simpan</span></button>
+        <button class="btn sec2" type="button" data-close>Batal</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Sticky footer -->
@@ -387,6 +441,7 @@ html.mlock{overflow:hidden}
     plus:'<path d="M12 5v14M5 12h14"/>',
     close:'<path d="M6 6l12 12M18 6L6 18"/>',
     edit:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4zM13.5 6.5l4 4"/>',
+    dup:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
     trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M9 7V4h6v3"/>',
     ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>'
   };
@@ -517,8 +572,9 @@ html.mlock{overflow:hidden}
         return '<tr class="'+(r.id===editId?'sel':'')+'"><td>'+r.id+'</td><td><b>'+esc(r.nama_modul_ajar)+'</b></td>'+
           '<td><span class="kls">'+esc(r.kelas)+'</span></td>'+
           '<td><a class="lnk" href="'+href+'" target="_blank" rel="noopener noreferrer" title="'+esc(r.link_modul)+'">'+svg('ext')+'<span>Buka modul</span></a></td>'+
-          '<td class="act"><button type="button" class="ib" data-act="edit" data-id="'+r.id+'" aria-label="Ubah '+esc(r.nama_modul_ajar)+'">'+svg('edit')+'</button>'+
-          '<button type="button" class="ib del" data-act="del" data-id="'+r.id+'" aria-label="Hapus '+esc(r.nama_modul_ajar)+'">'+svg('trash')+'</button></td></tr>';
+          '<td class="act"><button type="button" class="ib" data-act="edit" data-id="'+r.id+'" data-tip="Ubah" aria-label="Ubah '+esc(r.nama_modul_ajar)+'">'+svg('edit')+'</button>'+
+          '<button type="button" class="ib" data-act="dup" data-id="'+r.id+'" data-tip="Duplikat" aria-label="Duplikat '+esc(r.nama_modul_ajar)+'">'+svg('dup')+'</button>'+
+          '<button type="button" class="ib del" data-act="del" data-id="'+r.id+'" data-tip="Hapus" aria-label="Hapus '+esc(r.nama_modul_ajar)+'">'+svg('trash')+'</button></td></tr>';
       }).join('');
     }
     $('stBuku').textContent=rows.length+' modul ajar';
@@ -580,6 +636,7 @@ html.mlock{overflow:hidden}
     var b=ev.target.closest('button[data-act]');if(!b||busy)return;
     var id=+b.dataset.id;
     if(b.dataset.act==='edit'){startEdit(id);return;}
+    if(b.dataset.act==='dup'){openDup(id);return;}
     var r=rows.find(function(x){return x.id===id;});if(!r)return;
     if(!confirm('Hapus modul ajar "'+r.nama_modul_ajar+'"?'))return;
     setBusy(true);
@@ -591,6 +648,66 @@ html.mlock{overflow:hidden}
       toast('Data berhasil dihapus.','ok');
     }catch(e){toast('Gagal menghapus: '+(e.message||e),'err');}
     setBusy(false);
+  });
+
+  /* ---------- Duplikat modul ajar ke kelas lain ---------- */
+  var dupSrc=null,dupFocus=null,shDup=$('shDup'),bd=$('bd');
+  function dupOpen(){return shDup.classList.contains('open');}
+  function openDup(id){
+    var r=rows.find(function(x){return x.id===id;});if(!r||busy)return;
+    dupSrc=r;
+    $('dSumber').value=r.id;$('dAsal').value=r.kelas||'';
+    $('dNama').value=r.nama_modul_ajar||'';$('dLink').value=r.link_modul||'';
+    var names=kelasRombel.slice();
+    $('dKelas').innerHTML='<option value="">'+(names.length?'— Pilih kelas tujuan —':'Belum ada data di halaman Rombel')+'</option>'+
+      names.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+    $('dKelas').value='';
+    dupFocus=document.activeElement;
+    bd.classList.add('open');shDup.classList.add('open');document.body.classList.add('lock');
+    setTimeout(function(){$('dKelas').focus();},260);
+  }
+  function closeDup(force){
+    if(busy&&!force)return;
+    if(!dupOpen())return;
+    shDup.classList.remove('open');bd.classList.remove('open');document.body.classList.remove('lock');
+    dupSrc=null;
+    if(dupFocus&&document.contains(dupFocus)&&dupFocus.focus)dupFocus.focus({preventScroll:true});
+    dupFocus=null;
+  }
+  bd.addEventListener('click',function(){closeDup();});
+  shDup.addEventListener('click',function(ev){if(ev.target.closest('[data-close]'))closeDup();});
+  document.addEventListener('keydown',function(ev){
+    if(!dupOpen())return;
+    if(ev.key==='Escape'){ev.preventDefault();closeDup();return;}
+    if(ev.key!=='Tab')return;
+    var f=[].filter.call(shDup.querySelectorAll('button,select,input,textarea'),function(el){return !el.disabled&&!el.hidden;});
+    if(!f.length)return;
+    var a=f[0],z=f[f.length-1],cur=document.activeElement;
+    if(!shDup.contains(cur)){ev.preventDefault();a.focus();}
+    else if(ev.shiftKey&&cur===a){ev.preventDefault();z.focus();}
+    else if(!ev.shiftKey&&cur===z){ev.preventDefault();a.focus();}
+  });
+  $('frmDup').addEventListener('submit',async function(ev){
+    ev.preventDefault();if(busy||!dupSrc)return;
+    var kelas=$('dKelas').value.trim().replace(/\s+/g,' ');
+    var nama=$('dNama').value.trim().replace(/\s+/g,' ');
+    var link=$('dLink').value.trim();
+    if(!kelas){toast('Kelas tujuan wajib dipilih.','err');$('dKelas').focus();return;}
+    if(!nama){toast('Nama Modul Ajar wajib diisi.','err');$('dNama').focus();return;}
+    if(!link){toast('Link Modul wajib diisi.','err');$('dLink').focus();return;}
+    if(!isUrl(link)){toast('Link Modul harus diawali http:// atau https://','err');$('dLink').focus();return;}
+    if(rows.some(function(x){return x.kelas===kelas&&(x.nama_modul_ajar||'').trim().toLowerCase()===nama.toLowerCase();})){
+      toast('Modul ajar dengan nama yang sama sudah ada di kelas '+kelas+'.','err');return;
+    }
+    setBusy(true);$('dSave').disabled=true;$('dSaveTxt').textContent='Menyimpan…';
+    try{
+      var res=await db.from(TABLE).insert({nama_modul_ajar:nama,kelas:kelas,link_modul:link}).select().single();
+      if(res.error)throw res.error;
+      closeDup(true);
+      await load();
+      toast('Modul ajar berhasil diduplikat ke kelas '+kelas+'.','ok');
+    }catch(e){toast('Gagal menduplikat: '+(e.message||e),'err');}
+    setBusy(false);$('dSave').disabled=false;$('dSaveTxt').textContent='Simpan';
   });
 
   $('q').addEventListener('input',render);
