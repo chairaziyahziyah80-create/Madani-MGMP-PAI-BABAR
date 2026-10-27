@@ -174,7 +174,19 @@ td.act,th.act{text-align:right;width:1%}
 .ib.del:hover{background:rgba(255,69,58,.14);color:var(--red)}
 .ib svg{width:18px;height:18px}
 .empty{padding:28px 14px;text-align:center;color:var(--muted);font-size:14px}
-.gap{height:16px}
+/* ===== Modal Tambah/Ubah ===== */
+.mback{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background:rgba(8,28,18,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s linear .2s}
+.mback.open{opacity:1;visibility:visible;transition:opacity .2s ease}
+.mdl{width:100%;max-width:560px;max-height:100%;overflow-y:auto;background:rgba(255,255,255,.96);
+  transform:translateY(14px) scale(.98);transition:transform .28s cubic-bezier(.22,1,.36,1)}
+.mback.open .mdl{transform:none}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mhead .ib{flex:none;margin:-6px -8px 0 0}
+.mdl .actions{justify-content:flex-end}
+html.mlock{overflow:hidden}
 .search{max-width:260px}
 .listhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 @media (max-width:640px){
@@ -306,23 +318,6 @@ td.act,th.act{text-align:right;width:1%}
     </div>
   </div>
 
-  <form id="frm" novalidate autocomplete="off">
-    <section class="panel box" id="card">
-      <h2 id="formTitle">Tambah Modul Ajar</h2>
-      <p class="sub">Isi data dan tempel link modul, lalu tekan Simpan. Pilih ikon pensil pada tabel untuk mengubah data.</p>
-      <div class="form">
-        <div class="fld"><label for="id">ID</label><input id="id" value="Otomatis" readonly></div>
-        <div class="fld"><label for="kelas">Kelas <em>*</em></label>
-          <select id="kelas" required><option value="">Memuat kelas…</option></select>
-        </div>
-        <div class="fld full"><label for="nama">Nama Modul Ajar <em>*</em></label><input id="nama" required maxlength="200" placeholder="Contoh: Modul Ajar PAI dan Budi Pekerti Kelas VII Bab 1"></div>
-        <div class="fld full"><label for="link">Link Modul <em>*</em></label><input id="link" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/…"></div>
-      </div>
-    </section>
-  </form>
-
-  <div class="gap"></div>
-
   <section class="panel box">
     <div class="listhead">
       <div><h2>Daftar Modul Ajar</h2></div>
@@ -340,13 +335,35 @@ td.act,th.act{text-align:right;width:1%}
   </section>
 </main>
 
+<!-- Modal Tambah / Ubah Modul Ajar -->
+<div class="mback" id="mback">
+  <form id="frm" class="panel box mdl" role="dialog" aria-modal="true" aria-labelledby="formTitle" novalidate autocomplete="off">
+    <div class="mhead">
+      <h2 id="formTitle">Tambah Modul Ajar</h2>
+      <button type="button" class="ib" id="mClose" aria-label="Tutup"><span data-i="close"></span></button>
+    </div>
+    <p class="sub" id="formSub">Isi data dan tempel link modul, lalu tekan Simpan.</p>
+    <div class="form">
+      <div class="fld"><label for="id">ID</label><input id="id" value="Otomatis" readonly></div>
+      <div class="fld"><label for="kelas">Kelas <em>*</em></label>
+        <select id="kelas" required><option value="">Memuat kelas…</option></select>
+      </div>
+      <div class="fld full"><label for="nama">Nama Modul Ajar <em>*</em></label><input id="nama" required maxlength="200" placeholder="Contoh: Modul Ajar PAI dan Budi Pekerti Kelas VII Bab 1"></div>
+      <div class="fld full"><label for="link">Link Modul <em>*</em></label><input id="link" type="url" inputmode="url" maxlength="1000" placeholder="https://drive.google.com/…"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn sec2" id="mCancel">Batal</button>
+      <button type="submit" class="btn pri" id="bSave"><span id="bSaveTxt">Simpan</span></button>
+    </div>
+  </form>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Sticky footer -->
 <div class="dock">
   <nav aria-label="Menu utama">
     <a class="d" id="btnHome" data-tip="Beranda" aria-label="Beranda" href="adminguru.html"><span class="ic" style="background:linear-gradient(160deg,#2fd283,#0b7a47)" data-i="home"></span>Beranda</a>
-    <button class="d" id="bSave" data-tip="Simpan" aria-label="Simpan" type="submit" form="frm"><span class="ic" style="background:linear-gradient(160deg,#60a5fa,#1d4ed8)" data-i="save"></span><span id="bSaveTxt">Simpan</span></button>
     <button class="d" id="bNew" data-tip="Baru" aria-label="Baru" type="button"><span class="ic" style="background:linear-gradient(160deg,#a78bfa,#6d28d9)" data-i="plus"></span>Baru</button>
     <button class="d" id="bRefresh" data-tip="Refresh" aria-label="Refresh" type="button"><span class="ic" style="background:linear-gradient(160deg,#fb923c,#c2410c)" data-i="refresh"></span>Refresh</button>
   </nav>
@@ -368,6 +385,7 @@ td.act,th.act{text-align:right;width:1%}
     refresh:'<path d="M20 12a8 8 0 11-2.6-5.9M20 4v5h-5"/>',
     save:'<path d="M5 3h11l4 4v13a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1zM8 3v5h7V3M8 21v-7h8v7"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
+    close:'<path d="M6 6l12 12M18 6L6 18"/>',
     edit:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4zM13.5 6.5l4 4"/>',
     trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M9 7V4h6v3"/>',
     ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>'
@@ -428,6 +446,7 @@ td.act,th.act{text-align:right;width:1%}
     editId=null;
     $('id').value='Otomatis';fillKelas('');$('nama').value='';$('link').value='';
     $('formTitle').textContent='Tambah Modul Ajar';
+    $('formSub').textContent='Isi data dan tempel link modul, lalu tekan Simpan.';
     $('bSaveTxt').textContent='Simpan';
     render();
   }
@@ -436,11 +455,45 @@ td.act,th.act{text-align:right;width:1%}
     editId=id;
     $('id').value=r.id;fillKelas(r.kelas||'');$('nama').value=r.nama_modul_ajar||'';$('link').value=r.link_modul||'';
     $('formTitle').textContent='Ubah Modul Ajar';
+    $('formSub').textContent='Ubah data lalu tekan Perbarui.';
     $('bSaveTxt').textContent='Perbarui';
     render();
-    window.scrollTo({top:0,behavior:'smooth'});
-    $('nama').focus();
+    openModal();
   }
+
+  /* ---------- Modal ---------- */
+  var mback=$('mback'),lastFocus=null;
+  function modalOpen(){return mback.classList.contains('open');}
+  function openModal(){
+    lastFocus=document.activeElement;
+    mback.classList.add('open');
+    document.documentElement.classList.add('mlock');
+    $('nama').focus({preventScroll:true});
+  }
+  function closeModal(){
+    if(!modalOpen())return;
+    mback.classList.remove('open');
+    document.documentElement.classList.remove('mlock');
+    editId=null;render(); /* hapus sorotan baris yang sedang diubah */
+    if(lastFocus&&document.contains(lastFocus)&&lastFocus.focus)lastFocus.focus({preventScroll:true});
+    lastFocus=null;
+  }
+  $('mClose').addEventListener('click',function(){if(!busy)closeModal();});
+  $('mCancel').addEventListener('click',function(){if(!busy)closeModal();});
+  var downOn=null;
+  mback.addEventListener('pointerdown',function(e){downOn=e.target;});
+  mback.addEventListener('click',function(e){if(e.target===mback&&downOn===mback&&!busy)closeModal();});
+  document.addEventListener('keydown',function(e){
+    if(!modalOpen())return;
+    if(e.key==='Escape'){e.preventDefault();if(!busy)closeModal();return;}
+    if(e.key!=='Tab')return;
+    var f=[].filter.call($('frm').querySelectorAll('button,select,input,textarea'),function(el){return !el.disabled;});
+    if(!f.length)return;
+    var a=f[0],z=f[f.length-1],cur=document.activeElement;
+    if(!$('frm').contains(cur)){e.preventDefault();a.focus();}
+    else if(e.shiftKey&&cur===a){e.preventDefault();z.focus();}
+    else if(!e.shiftKey&&cur===z){e.preventDefault();a.focus();}
+  });
 
   /* ---------- Tabel ---------- */
   function fillFilter(){
@@ -457,7 +510,7 @@ td.act,th.act{text-align:right;width:1%}
       return (!fk||r.kelas===fk)&&(!q||(r.nama_modul_ajar||'').toLowerCase().indexOf(q)>-1||(r.kelas||'').toLowerCase().indexOf(q)>-1);
     });
     var tb=$('tb');
-    if(!list.length){tb.innerHTML='<tr><td colspan="5" class="empty">'+(rows.length?'Tidak ada modul ajar yang cocok.':'Belum ada modul ajar. Isi formulir di atas untuk menambahkan.')+'</td></tr>';}
+    if(!list.length){tb.innerHTML='<tr><td colspan="5" class="empty">'+(rows.length?'Tidak ada modul ajar yang cocok.':'Belum ada modul ajar. Tekan Baru untuk menambahkan.')+'</td></tr>';}
     else{
       tb.innerHTML=list.map(function(r){
         var href=isUrl(r.link_modul)?esc(r.link_modul):'#';
@@ -479,7 +532,7 @@ td.act,th.act{text-align:right;width:1%}
       if(r.error)throw r.error;
       rows=r.data||[];
       $('stKelas').textContent=fillFilter()+' kelas';
-      if(editId!==null&&!rows.some(function(x){return x.id===editId;}))resetForm();
+      if(editId!==null&&!rows.some(function(x){return x.id===editId;}))closeModal();
       render();
       setBusy(false);return true;
     }catch(e){
@@ -513,7 +566,7 @@ td.act,th.act{text-align:right;width:1%}
       if(res.error)throw res.error;
       var wasEdit=editId!==null;
       await load();
-      resetForm();
+      closeModal();
       toast(wasEdit?'Data berhasil diperbarui.':'Data berhasil ditambahkan.','ok');
     }catch(e){
       toast('Gagal menyimpan: '+(e.message||e),'err');
@@ -542,7 +595,7 @@ td.act,th.act{text-align:right;width:1%}
 
   $('q').addEventListener('input',render);
   $('fKelas').addEventListener('change',render);
-  $('bNew').addEventListener('click',function(){resetForm();$('nama').focus();});
+  $('bNew').addEventListener('click',function(){resetForm();openModal();});
   $('bRefresh').addEventListener('click',function(){Promise.all([load(),loadKelas()]).then(function(a){if(a[0])toast('Data terbaru ditampilkan.','ok');});});
 
   paintNav();
