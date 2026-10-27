@@ -702,6 +702,32 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   </div>
 </div>
 
+<!-- Sheet: duplikat paket soal ke kelas lain -->
+<div class="sh" id="shDup" style="--sw:640px" role="dialog" aria-modal="true" aria-labelledby="dupTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sh-h"><h2 id="dupTitle">Duplikat Soal</h2><button class="xb" type="button" data-close aria-label="Tutup" data-i="x"></button></div>
+  <form class="sh-b" id="frmDup" novalidate autocomplete="off">
+    <p class="sub">Pilih kelas tujuan, lalu simpan. Data akan dimasukkan sebagai paket soal baru dan data asli tidak berubah.</p>
+    <div class="form">
+      <div class="fld"><label for="dSumber">Disalin dari ID</label><input id="dSumber" readonly></div>
+      <div class="fld"><label for="dAsal">Kelas Asal</label><input id="dAsal" readonly></div>
+      <div class="fld full"><label for="dKelas">Kelas Tujuan <em>*</em></label><select id="dKelas" required></select></div>
+      <div class="fld"><label for="dKat">Kategori Penilaian <em>*</em></label>
+        <select id="dKat" required disabled><option value="">— Pilih kelas tujuan dulu —</option></select></div>
+      <div class="fld"><label for="dKkm">KKM / KKTP</label><input id="dKkm" value="—" readonly></div>
+      <div class="fld full"><label for="dMateri">Materi Terkait</label><select id="dMateri" disabled><option value="">— Pilih kelas tujuan dulu —</option></select></div>
+      <div class="fld full"><p class="hint" id="dHint" style="margin-top:0">Penilaian dan KKM mengikuti mapping kelas tujuan (halaman Mapping Siswa).</p></div>
+      <div class="fld full"><label for="dJudul">Judul Paket Soal</label><input id="dJudul" value="—" readonly></div>
+      <div class="fld full"><label for="dDesk">Deskripsi / Petunjuk Pengerjaan</label><textarea id="dDesk" maxlength="300"></textarea></div>
+      <div class="fld full"><p class="hint" id="dInfo" style="margin-top:0"></p></div>
+      <div class="actions">
+        <button class="btn pri" type="submit" id="dSave"><span id="dSaveTxt">Simpan</span></button>
+        <button class="btn sec2" type="button" data-close>Batal</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <!-- Sheet: aktifkan soal -->
 <div class="sh" id="shAkt" style="--sw:640px" role="dialog" aria-modal="true" aria-labelledby="aTitle">
   <div class="grab" aria-hidden="true"></div>
@@ -883,6 +909,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       '<div class="mb"><h3>'+esc(p.judul)+'</h3>'+(p.deskripsi?'<p>'+esc(p.deskripsi)+'</p>':'')+(p.aktif&&p.token?'<div class="tokln">Token: '+esc(p.token)+' · '+p.durasi+' mnt</div>':'')+
         '<div class="mf"><div class="meta"><span class="kls">'+esc(p.kelas)+'</span><span class="kls q">'+esc(katLabel(p))+'</span>'+(p.materi?'<span class="kls mt" title="'+esc(p.materi)+'">'+esc(p.materi)+'</span>':'')+'</div>'+
         '<div class="ab"><button type="button" class="ib" data-act="edit" data-id="'+p.id+'" aria-label="Ubah '+esc(p.judul)+'">'+svg('edit')+'</button>'+
+        '<button type="button" class="ib" data-act="dup" data-id="'+p.id+'" title="Duplikat ke kelas lain" aria-label="Duplikat '+esc(p.judul)+'">'+svg('copy')+'</button>'+
         '<button type="button" class="ib del" data-act="del" data-id="'+p.id+'" aria-label="Hapus '+esc(p.judul)+'">'+svg('trash')+'</button></div></div>'+
         '<button type="button" class="act'+(p.aktif?' on':'')+'" data-act="toggle" data-id="'+p.id+'" aria-pressed="'+(p.aktif?'true':'false')+'">'+(p.aktif?'Nonaktifkan soal':'Aktifkan soal')+'</button>'+
         '<button type="button" class="act pr" data-act="print" data-id="'+p.id+'" aria-label="Cetak naskah '+esc(p.judul)+'">'+svg('print')+'Cetak naskah</button>'+
@@ -908,7 +935,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var b=ev.target.closest('button[data-act]');
     if(b){
       ev.stopPropagation();var id=+b.dataset.id;
-      if(b.dataset.act==='edit')openNew(id);else if(b.dataset.act==='print')cetakNaskah(id,b);else if(b.dataset.act==='toggle'){var pp=pakets.filter(function(x){return x.id===id;})[0];if(pp&&pp.aktif)nonaktifkan(id,b);else openAktif(id);}else delPaket(id);
+      if(b.dataset.act==='edit')openNew(id);else if(b.dataset.act==='dup')openDup(id);else if(b.dataset.act==='print')cetakNaskah(id,b);else if(b.dataset.act==='toggle'){var pp=pakets.filter(function(x){return x.id===id;})[0];if(pp&&pp.aktif)nonaktifkan(id,b);else openAktif(id);}else delPaket(id);
       return;
     }
     var c=ev.target.closest('.mc');if(c)openRiwayat(+c.dataset.id);
@@ -1040,6 +1067,10 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   }
   function cleanLink(u){return String(u||'').replace(/#(suara|video)$/i,'');}
   var KIND_LBL={suara:'Suara',video:'Video'};
+  /* hasil duplikat berbagi file gambar dengan paket asal: file hanya dihapus bila tidak dipakai paket lain */
+  function gambarDipakaiLain(url,exceptId){
+    return pakets.some(function(p){return p.id!==exceptId&&p.soal.some(function(q){return q.gambar===url;});});
+  }
   async function hapusGambar(paths){
     paths=(paths||[]).filter(Boolean);
     if(!paths.length||!db)return;
@@ -1087,7 +1118,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     }catch(e){await hapusGambar(up);throw e;}
     /* bersihkan gambar lama yang tidak dipakai lagi */
     var keep={};rec.soal.forEach(function(q){if(q.gambar)keep[q.gambar]=1;});
-    if(old)await hapusGambar(old.soal.filter(function(q){return q.gambar&&!keep[q.gambar];}).map(function(q){return pathFromUrl(q.gambar);}));
+    if(old)await hapusGambar(old.soal.filter(function(q){return q.gambar&&!keep[q.gambar]&&!gambarDipakaiLain(q.gambar,id);}).map(function(q){return pathFromUrl(q.gambar);}));
   }
 
   function colMsg(e){return dbMsg(e);}
@@ -1193,7 +1224,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       var r=await db.from(T_PAKET).delete().eq('id',id);
       if(r.error)throw r.error;
       pakets=pakets.filter(function(x){return x.id!==id;});
-      hapusGambar(p.soal.filter(function(q){return q.gambar;}).map(function(q){return pathFromUrl(q.gambar);}));
+      hapusGambar(p.soal.filter(function(q){return q.gambar&&!gambarDipakaiLain(q.gambar,id);}).map(function(q){return pathFromUrl(q.gambar);}));
       fillFilter();render();toast('Paket soal dihapus.','ok');
     }catch(e){toast('Gagal menghapus: '+dbMsg(e),'err');}
     busy=false;
@@ -1668,6 +1699,81 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       toast('Gagal menyimpan: '+dbMsg(e),'err');
       if(was)loadPakets();
     }
+  });
+
+  /* ---------- Duplikat paket soal ke kelas lain ---------- */
+  var dupSrc=null;
+  function dupKat(kelas,cur){
+    var sel=$('dKat'),m=MAP[kelas],opts=[];
+    if(!kelas){sel.innerHTML='<option value="">— Pilih kelas tujuan dulu —</option>';sel.disabled=true;return;}
+    ['UH','UTS','UAS'].forEach(function(k){
+      var n=m?m[k]:0;
+      for(var i=1;i<=n;i++)opts.push({v:k+':'+i,t:KAT[k]+(n>1?' '+i:'')});
+    });
+    sel.innerHTML=opts.length?'<option value="">— Pilih penilaian —</option>'+opts.map(function(o){
+      return '<option value="'+o.v+'">'+esc(o.t)+'</option>';}).join(''):'<option value="">— Belum ada penilaian —</option>';
+    sel.disabled=!opts.length;
+    sel.value=cur&&opts.some(function(o){return o.v===cur;})?cur:'';
+  }
+  function dupJudul(){
+    var kelas=$('dKelas').value,kr=$('dKat').value;
+    if(!kelas||!kr){$('dJudul').value='—';return;}
+    var pr=kr.split(':'),mt=$('dMateri').value;
+    $('dJudul').value=katLabel({kelas:kelas,kategori:pr[0],ke:+pr[1]||1})+(mt?' — '+mt:'');
+  }
+  /* penilaian, KKM, dan materi mengikuti kelas tujuan; nilai asal dipertahankan hanya bila tersedia di kelas tujuan */
+  function refreshDup(kelas){
+    var p=dupSrc;if(!p)return;
+    var m=kelas?MAP[kelas]:null,h=$('dHint');
+    dupKat(kelas,p.kategori+':'+(p.ke||1));
+    $('dKkm').value=m?m.kktp:'—';
+    var ms=$('dMateri'),l=kelas?(MATERI[kelas]||[]):[],has=l.indexOf(p.materi)>-1;
+    if(!kelas){ms.innerHTML='<option value="">— Pilih kelas tujuan dulu —</option>';ms.disabled=true;}
+    else{fillSel(ms,l,has?p.materi:'',l.length?'— Pilih materi —':'— Belum ada materi untuk kelas ini —');ms.disabled=!l.length;}
+    if(!kelas)h.textContent='Penilaian dan KKM mengikuti mapping kelas tujuan (halaman Mapping Siswa).';
+    else if(!m)h.textContent='Kelas tujuan belum dimapping. Atur dulu di halaman Mapping Siswa.';
+    else if($('dKat').disabled)h.textContent='Kelas tujuan belum punya jumlah penilaian (UH/UTS/UAS). Atur di halaman Mapping Siswa.';
+    else h.textContent='Pilihan penilaian dan KKM mengikuti mapping kelas '+kelas+'.'+(p.materi&&!has?' Materi "'+p.materi+'" tidak ada di kelas ini, pilih materi lain bila perlu.':'');
+    dupJudul();
+  }
+  function openDup(id){
+    var p=pakets.filter(function(x){return x.id===id;})[0];if(!p||busy)return;
+    dupSrc=p;
+    $('dSumber').value=p.id;$('dAsal').value=p.kelas||'';
+    fillSel($('dKelas'),kelasSiswa,'',kelasSiswa.length?'— Pilih kelas tujuan —':'Memuat kelas…');
+    if(!kelasSiswa.length)loadKelasSiswa().then(function(){
+      if($('shDup').classList.contains('open'))fillSel($('dKelas'),kelasSiswa,$('dKelas').value,kelasSiswa.length?'— Pilih kelas tujuan —':'Belum ada data rombel di siswa');
+    });
+    $('dDesk').value=p.deskripsi||'';
+    $('dInfo').textContent=p.soal.length+' butir soal (total skor '+totalSkor(p)+') ikut disalin. Paket baru berstatus nonaktif dan tidak membawa riwayat pengerjaan.';
+    refreshDup('');
+    openSheet('shDup');
+    setTimeout(function(){$('dKelas').focus();},320);
+  }
+  $('dKelas').addEventListener('change',function(){refreshDup(this.value);});
+  $('dKat').addEventListener('change',dupJudul);
+  $('dMateri').addEventListener('change',dupJudul);
+  $('frmDup').addEventListener('submit',async function(ev){
+    ev.preventDefault();if(busy||!dupSrc)return;
+    var p=dupSrc,kelas=$('dKelas').value.trim(),katRaw=$('dKat').value,kat=katRaw.split(':')[0],ke=+katRaw.split(':')[1]||1;
+    if(!kelas){toast('Kelas tujuan wajib dipilih.','err');$('dKelas').focus();return;}
+    if(!kat){toast('Penilaian wajib dipilih (atur dulu di Mapping Siswa jika kosong).','err');$('dKat').focus();return;}
+    var m=MAP[kelas],materi=$('dMateri').value||'';
+    var rec={judul:'',kelas:kelas,materi:materi,kategori:kat,ke:ke,kkm:m?m.kktp:null,bentuk:p.bentuk,deskripsi:$('dDesk').value.trim(),
+      soal:JSON.parse(JSON.stringify(p.soal))};
+    rec.judul=katLabel(rec)+(materi?' — '+materi:'');
+    if(pakets.some(function(x){return x.kelas===kelas&&x.bentuk===p.bentuk&&(x.judul||'').trim().toLowerCase()===rec.judul.toLowerCase();})){
+      toast('Paket soal "'+rec.judul+'" sudah ada di kelas '+kelas+'.','err');return;
+    }
+    busy=true;$('dSave').disabled=true;$('dSaveTxt').textContent='Menyimpan…';
+    try{
+      if(!db)throw new Error('Supabase tidak tersedia');
+      await savePaket(rec,null);
+      await loadPakets();
+      busy=false;closeSheets();
+      toast('Paket soal berhasil diduplikat ke kelas '+kelas+'.','ok');
+    }catch(e){toast('Gagal menduplikat: '+dbMsg(e),'err');}
+    busy=false;$('dSave').disabled=false;$('dSaveTxt').textContent='Simpan';
   });
 
   /* ---------- Riwayat pengerjaan ---------- */
