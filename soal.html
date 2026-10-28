@@ -374,6 +374,9 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
 .lnkbox .gi b{display:block;color:var(--text);font-size:12.5px}
 .lnkbox .gi a{display:block;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:underline}
 .lnkbox .gb{display:flex;gap:2px;flex:none}
+.lnkbox.aud{align-items:flex-start}
+.lnkbox .gi audio{display:block;width:100%;height:36px;margin-top:6px}
+.pl.pa audio{flex:1;min-width:0;height:36px}
 .lnkrow{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px;border-radius:12px;background:var(--track)}
 .lnkrow .li{flex:none;color:var(--accent);display:grid;place-items:center}
 .lnkrow .li svg{width:18px;height:18px}
@@ -1026,7 +1029,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     }
   }
   /* ---------- Gambar soal: kompres ≤ 20 KB, simpan di bucket "aset" ---------- */
-  var BUCKET='aset',GBR_DIR='soal',GBR_MAX=20*1024;
+  var BUCKET='aset',GBR_DIR='soal',GBR_MAX=20*1024,AUD_MAX=3*1024*1024;
   function kompres(file){
     return new Promise(function(res,rej){
       var url=URL.createObjectURL(file),img=new Image();
@@ -1080,14 +1083,32 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   }
   function cleanLink(u){return String(u||'').replace(/#(suara|video)$/i,'');}
   var KIND_LBL={suara:'Suara',video:'Video'};
+  /* jenis lampiran di draft: file baru yang belum diunggah (_prev/_bk) atau yang sudah tersimpan (gambar) */
+  function kindDraft(s){return s._prev?(s._bk||'image'):(s.gambar?kindOf(s.gambar):'');}
   /* hasil duplikat berbagi file gambar dengan paket asal: file hanya dihapus bila tidak dipakai paket lain */
   function gambarDipakaiLain(url,exceptId){
     return pakets.some(function(p){return p.id!==exceptId&&p.soal.some(function(q){return q.gambar===url;});});
   }
+  /* hapus file di bucket; hasil: n = jumlah file terhapus, gagal = true bila tidak ada yang terhapus (mis. policy DELETE belum ada) */
   async function hapusGambar(paths){
-    paths=(paths||[]).filter(Boolean);
-    if(!paths.length||!db)return;
-    try{await db.storage.from(BUCKET).remove(paths);}catch(_){}
+    var u={};(paths||[]).forEach(function(x){if(x)u[x]=1;});
+    paths=Object.keys(u);
+    if(!paths.length||!db)return {n:0,gagal:false,ada:false};
+    try{
+      var r=await db.storage.from(BUCKET).remove(paths);
+      var n=r&&r.data?r.data.length:0;
+      return {n:n,gagal:!!(r&&r.error)||n===0,ada:true};
+    }catch(_){return {n:0,gagal:true,ada:true};}
+  }
+  /* file sisa di folder paket (mis. unggahan lama yang tidak terpakai) yang tidak dipakai paket lain */
+  async function fileYatim(id){
+    try{
+      var dir=GBR_DIR+'/'+id,r=await db.storage.from(BUCKET).list(dir,{limit:1000});
+      if(r.error||!r.data)return [];
+      var pakai={};
+      pakets.forEach(function(x){x.soal.forEach(function(q){var pp=q.gambar&&pathFromUrl(q.gambar);if(pp)pakai[pp]=1;});});
+      return r.data.filter(function(f){return f&&f.name&&f.id;}).map(function(f){return dir+'/'+f.name;}).filter(function(pp){return !pakai[pp];});
+    }catch(_){return [];}
   }
   /* unggah gambar baru (blob di draft), isi q.gambar dengan URL publik; kembalikan daftar path yang terunggah */
   async function uploadGambar(paketId,list){
@@ -1095,12 +1116,13 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     try{
       for(var i=0;i<list.length;i++){
         var q=list[i];if(!q._blob)continue;
-        var path=GBR_DIR+'/'+paketId+'/'+(i+1)+'_'+Date.now().toString(36)+'.jpg';
-        var r=await db.storage.from(BUCKET).upload(path,q._blob,{contentType:'image/jpeg',cacheControl:'31536000',upsert:false});
+        var aud=q._bk==='suara';
+        var path=GBR_DIR+'/'+paketId+'/'+(i+1)+'_'+Date.now().toString(36)+(aud?'.mp3':'.jpg');
+        var r=await db.storage.from(BUCKET).upload(path,q._blob,{contentType:aud?'audio/mpeg':'image/jpeg',cacheControl:'31536000',upsert:false});
         if(r.error)throw r.error;
         up.push(path);
         q.gambar=db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-        q._blob=null;
+        q._blob=null;q._bk=null;
       }
     }catch(e){await hapusGambar(up);throw e;}
     return up;
@@ -1235,10 +1257,21 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     busy=true;
     try{
       var r=await db.from(T_PAKET).delete().eq('id',id);
+      /* bila tabel butir_soal tidak memakai ON DELETE CASCADE, hapus butirnya lebih dulu lalu ulangi */
+      if(r.error&&String(r.error.code)==='23503'){
+        var rb=await db.from(T_BUTIR).delete().eq('paket_id',id);
+        if(rb.error)throw rb.error;
+        r=await db.from(T_PAKET).delete().eq('id',id);
+      }
       if(r.error)throw r.error;
       pakets=pakets.filter(function(x){return x.id!==id;});
-      hapusGambar(p.soal.filter(function(q){return q.gambar&&!gambarDipakaiLain(q.gambar,id);}).map(function(q){return pathFromUrl(q.gambar);}));
-      fillFilter();render();toast('Paket soal dihapus.','ok');
+      /* hapus semua file lampiran paket (gambar & MP3) di bucket aset, kecuali yang masih dipakai paket hasil duplikat */
+      var paths=p.soal.filter(function(q){return q.gambar&&!gambarDipakaiLain(q.gambar,id);}).map(function(q){return pathFromUrl(q.gambar);});
+      paths=paths.concat(await fileYatim(id));
+      var rm=await hapusGambar(paths);
+      fillFilter();render();
+      if(rm.gagal)toast('Paket soal dihapus, tetapi file di bucket aset gagal dihapus. Periksa policy DELETE bucket aset di Supabase.','err');
+      else toast(rm.ada?'Paket soal dan file lampirannya dihapus.':'Paket soal dihapus.','ok');
     }catch(e){toast('Gagal menghapus: '+dbMsg(e),'err');}
     busy=false;
   }
@@ -1265,6 +1298,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var k=kindOf(s.gambar);
     if(k==='image')return '<img class="pimg" src="'+esc(s.gambar)+'" alt="Gambar soal '+(i+1)+'" loading="lazy">';
     var u=cleanLink(s.gambar);
+    if(k==='suara'&&safeLink(u))return '<div class="pl pa">'+svg(k)+'<audio controls preload="none" src="'+esc(u)+'"></audio></div>';
     return '<div class="pl">'+svg(k)+'<a href="'+esc(safeLink(u)?u:'#')+'" target="_blank" rel="noopener noreferrer">'+esc(u)+'</a></div>';
   }
   $('pEdit').addEventListener('click',function(){if(curPrev!=null)openNew(curPrev);});
@@ -1431,13 +1465,20 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
   document.addEventListener('click',function(ev){if(ev.target.closest('[data-back]'))openSheet('shType');});
 
   function gbrHtml(s,i){
-    var k=s._prev?'image':(s.gambar?kindOf(s.gambar):'');
+    var k=kindDraft(s);
     var row='';
     if(s._lm){
       row='<div class="lnkrow"><span class="li">'+svg(s._lm)+'</span><input class="oi" type="url" data-lin="'+i+'" inputmode="url" maxlength="500" placeholder="Tempel link '+KIND_LBL[s._lm].toLowerCase()+' (https://…)" value="'+esc(k===s._lm?cleanLink(s.gambar):'')+'" aria-label="Link '+KIND_LBL[s._lm].toLowerCase()+' nomor '+(i+1)+'">'+
         '<button type="button" class="lb ok" data-lok="'+i+'">Pasang</button><button type="button" class="lb no" data-lno="'+i+'">Batal</button></div>';
     }
-    if(k==='suara'||k==='video'){
+    if(k==='suara'){
+      var tersimpan=!!pathFromUrl(s.gambar),au=s._prev||cleanLink(s.gambar);
+      var info=s._blob?fmtKb(s._blob.size)+' · tersimpan saat soal disimpan':(tersimpan?'Sudah tersimpan':'<a href="'+esc(cleanLink(s.gambar))+'" target="_blank" rel="noopener noreferrer">'+esc(cleanLink(s.gambar))+'</a>');
+      return '<div class="lnkbox aud"><span class="li">'+svg('suara')+'</span><div class="gi"><b>'+(s._blob||tersimpan?'File suara (MP3)':'Link suara')+'</b>'+info+'<audio controls preload="none" src="'+esc(au)+'"></audio></div>'+
+        '<div class="gb"><button type="button" class="ib" data-aud="'+i+'" aria-label="Ganti file suara nomor '+(i+1)+'">'+svg('refresh')+'</button>'+
+        '<button type="button" class="ib del" data-rmimg="'+i+'" aria-label="Hapus file suara nomor '+(i+1)+'">'+svg('trash')+'</button></div></div>'+row;
+    }
+    if(k==='video'){
       return '<div class="lnkbox"><span class="li">'+svg(k)+'</span><div class="gi"><b>Link '+KIND_LBL[k].toLowerCase()+'</b><a href="'+esc(cleanLink(s.gambar))+'" target="_blank" rel="noopener noreferrer">'+esc(cleanLink(s.gambar))+'</a></div>'+
         '<div class="gb"><button type="button" class="ib" data-lnk="'+k+'" data-i="'+i+'" aria-label="Ganti link '+k+' nomor '+(i+1)+'">'+svg('refresh')+'</button>'+
         '<button type="button" class="ib del" data-rmimg="'+i+'" aria-label="Hapus link '+k+' nomor '+(i+1)+'">'+svg('trash')+'</button></div></div>'+row;
@@ -1452,9 +1493,9 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       var h='<div class="qb" data-qi="'+i+'"><div class="qh"><span class="qn">'+(i+1)+'</span>'+
         (s.tipe==='tts'?'<select data-f="arah" aria-label="Arah pertanyaan '+(i+1)+'"><option value="mendatar"'+(s.arah!=='menurun'?' selected':'')+'>Mendatar</option><option value="menurun"'+(s.arah==='menurun'?' selected':'')+'>Menurun</option></select>':'')+
         '<label class="sk">Skor<input data-f="skor" type="number" inputmode="numeric" min="0" max="100" step="1" value="'+esc(s.skor)+'" aria-label="Skor soal '+(i+1)+'"></label>'+
-        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='suara')?' has':'')+'" data-lnk="suara" data-i="'+i+'" data-tip="Tambah link suara" aria-label="Tambah link suara nomor '+(i+1)+'">'+svg('suara')+'</button>'+
-        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='video')?' has':'')+'" data-lnk="video" data-i="'+i+'" data-tip="Tambah link video" aria-label="Tambah link video nomor '+(i+1)+'">'+svg('video')+'</button>'+
-        '<button type="button" class="ib'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?' has':'')+'" data-img="'+i+'" data-tip="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti gambar':'Tambah gambar')+'" aria-label="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
+        '<button type="button" class="ib'+(kindDraft(s)==='suara'?' has':'')+'" data-aud="'+i+'" data-tip="'+(kindDraft(s)==='suara'?'Ganti file suara (MP3, maks. 3 MB)':'Upload suara (MP3, maks. 3 MB)')+'" aria-label="Upload file suara nomor '+(i+1)+'">'+svg('suara')+'</button>'+
+        '<button type="button" class="ib'+(kindDraft(s)==='video'?' has':'')+'" data-lnk="video" data-i="'+i+'" data-tip="Tambah link video" aria-label="Tambah link video nomor '+(i+1)+'">'+svg('video')+'</button>'+
+        '<button type="button" class="ib'+(kindDraft(s)==='image'?' has':'')+'" data-img="'+i+'" data-tip="'+(kindDraft(s)==='image'?'Ganti gambar':'Tambah gambar')+'" aria-label="'+(kindDraft(s)==='image'?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
         '<button type="button" class="ib del" data-rm="'+i+'" data-tip="Hapus soal" aria-label="Hapus nomor '+(i+1)+'">'+svg('trash')+'</button></div>'+
         '<textarea data-f="teks" maxlength="1000" placeholder="'+(s.tipe==='tts'?'Petunjuk / pertanyaan untuk kotak ini…':s.tipe==='bs'?'Tulis pernyataan di sini…':'Tulis pertanyaan di sini…')+'" aria-label="Pertanyaan '+(i+1)+'">'+esc(s.teks)+'</textarea>'+gbrHtml(s,i);
       if(s.tipe==='pg'){
@@ -1594,6 +1635,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     var b=ev.target.closest('[data-rm]');if(!b)return;
     var i=+b.dataset.rm;
     if(draft[i]&&(draft[i].teks||'').trim()&&!confirm('Hapus nomor '+(i+1)+'?'))return;
+    if(draft[i]&&draft[i]._prev)URL.revokeObjectURL(draft[i]._prev);
     draft.splice(i,1);renderDraft();
   });
   /* ---------- Pilih / ganti / hapus gambar ---------- */
@@ -1606,10 +1648,29 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     if(r){
       var s=draft[+r.dataset.rmimg];if(!s)return;
       if(s._prev)URL.revokeObjectURL(s._prev);
-      s._blob=null;s._prev=null;s.gambar=null;renderDraft();
+      s._blob=null;s._bk=null;s._prev=null;s.gambar=null;renderDraft();
     }
   });
-  /* ---------- Tambah / ganti link suara & video (disimpan di kolom gambar) ---------- */
+  /* ---------- Upload file suara MP3 (maks. 3 MB) — URL disimpan di kolom gambar ---------- */
+  var fAud=document.createElement('input');fAud.type='file';fAud.accept='audio/mpeg,.mp3';fAud.hidden=true;document.body.appendChild(fAud);
+  var audIdx=-1;
+  $('qList').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-aud]');if(!b)return;
+    var i=+b.dataset.aud,s=draft[i];if(!s)return;
+    var kd=kindDraft(s);
+    if(kd&&kd!=='suara'&&!confirm('Nomor '+(i+1)+' sudah memiliki '+(kd==='image'?'gambar':'link video')+'. Lampiran diganti dengan file suara?'))return;
+    audIdx=i;fAud.value='';fAud.click();
+  });
+  fAud.addEventListener('change',function(){
+    var f=fAud.files&&fAud.files[0],s=draft[audIdx];if(!f||!s)return;
+    if(!(/\.mp3$/i.test(f.name)||/^audio\/(mpeg|mp3)$/i.test(f.type))){toast('File suara harus berformat MP3.','err');return;}
+    if(f.size>AUD_MAX){toast('Ukuran file suara maksimal 3 MB (file ini '+(f.size/1048576).toFixed(1).replace('.',',')+' MB).','err');return;}
+    if(s._prev)URL.revokeObjectURL(s._prev);
+    s._blob=f;s._bk='suara';s._prev=URL.createObjectURL(f);s._lm=null;
+    renderDraft();
+    toast('File suara siap ('+fmtKb(f.size)+'). Tersimpan saat soal disimpan.','ok');
+  });
+  /* ---------- Tambah / ganti link video (disimpan di kolom gambar) ---------- */
   function pasangLink(i){
     var s=draft[i];if(!s)return;
     var inp=$('qList').querySelector('[data-lin="'+i+'"]');if(!inp)return;
@@ -1617,7 +1678,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     if(!safeLink(v)){toast('Link harus diawali http:// atau https://','err');inp.focus();return;}
     var kind=s._lm;
     if(s._prev)URL.revokeObjectURL(s._prev);
-    s._blob=null;s._prev=null;
+    s._blob=null;s._bk=null;s._prev=null;
     s.gambar=normLink(v,kind);s._lm=null;
     renderDraft();
     toast('Link '+KIND_LBL[kind].toLowerCase()+' dipasang. Tersimpan saat soal disimpan.','ok');
@@ -1628,7 +1689,8 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       var i=+b.dataset.i,s=draft[i];if(!s)return;
       var kind=b.dataset.lnk;
       if(s._lm===kind){s._lm=null;renderDraft();return;}
-      if((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))&&!confirm('Nomor '+(i+1)+' sudah memiliki gambar. Lampiran diganti dengan link '+kind+'?'))return;
+      var kd=kindDraft(s);
+      if(kd&&kd!==kind&&!confirm('Nomor '+(i+1)+' sudah memiliki '+(kd==='image'?'gambar':'file suara')+'. Lampiran diganti dengan link '+kind+'?'))return;
       s._lm=kind;renderDraft();
       var inp=$('qList').querySelector('[data-lin="'+i+'"]');if(inp)inp.focus();
       return;
@@ -1647,7 +1709,7 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
     try{
       var b=await kompres(f);
       if(s._prev)URL.revokeObjectURL(s._prev);
-      s._blob=b;s._prev=URL.createObjectURL(b);s._lm=null;
+      s._blob=b;s._bk='image';s._prev=URL.createObjectURL(b);s._lm=null;
       renderDraft();
       toast('Gambar siap ('+fmtKb(b.size)+'). Tersimpan saat soal disimpan.','ok');
     }catch(e){toast(e.message||'Gagal memproses gambar.','err');}
