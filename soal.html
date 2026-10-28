@@ -349,6 +349,19 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
 .op .oi{flex:1;min-width:0}
 .keyhint{font-size:11.5px;color:var(--muted);margin-top:6px}
 .qh .ib.has{color:var(--accent);background:rgba(18,160,95,.14)}
+/* Tooltip hover ikon di modal tambah soal (tampil di atas ikon) */
+.qh .ib[data-tip]{position:relative}
+.qh .ib[data-tip]::after,.qh .ib[data-tip]::before{position:absolute;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .15s,transform .15s;z-index:20}
+.qh .ib[data-tip]::after{content:attr(data-tip);bottom:calc(100% + 9px);left:50%;transform:translate(-50%,4px);padding:6px 11px;border-radius:8px;background:#000;color:#fff;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.qh .ib[data-tip]::before{content:"";bottom:calc(100% + 4px);left:50%;transform:translate(-50%,4px);border-style:solid;border-width:5px 5px 0;border-color:#000 transparent transparent}
+.qh .ib.del[data-tip]::after{left:auto;right:0;transform:translateY(4px)}
+.qh .ib.del[data-tip]::before{left:auto;right:12px;transform:translateY(4px)}
+.qh .ib[data-tip]:focus-visible::after,.qh .ib[data-tip]:focus-visible::before{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.qh .ib.del[data-tip]:focus-visible::after,.qh .ib.del[data-tip]:focus-visible::before{transform:translateY(0)}
+@media (hover:hover){
+  .qh .ib[data-tip]:hover::after,.qh .ib[data-tip]:hover::before{opacity:1;visibility:visible;transform:translate(-50%,0)}
+  .qh .ib.del[data-tip]:hover::after,.qh .ib.del[data-tip]:hover::before{transform:translateY(0)}
+}
 .gbox{display:flex;align-items:center;gap:12px;margin-top:10px;padding:8px;border-radius:12px;background:var(--track)}
 .gbox img{width:88px;height:66px;object-fit:cover;border-radius:8px;background:#fff;flex:none}
 .gbox .gi{flex:1;min-width:0;font-size:12px;color:var(--muted)}
@@ -1439,10 +1452,10 @@ a.kls.mt:hover{color:var(--accent);text-decoration:underline}
       var h='<div class="qb" data-qi="'+i+'"><div class="qh"><span class="qn">'+(i+1)+'</span>'+
         (s.tipe==='tts'?'<select data-f="arah" aria-label="Arah pertanyaan '+(i+1)+'"><option value="mendatar"'+(s.arah!=='menurun'?' selected':'')+'>Mendatar</option><option value="menurun"'+(s.arah==='menurun'?' selected':'')+'>Menurun</option></select>':'')+
         '<label class="sk">Skor<input data-f="skor" type="number" inputmode="numeric" min="0" max="100" step="1" value="'+esc(s.skor)+'" aria-label="Skor soal '+(i+1)+'"></label>'+
-        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='suara')?' has':'')+'" data-lnk="suara" data-i="'+i+'" title="Tambah link suara" aria-label="Tambah link suara nomor '+(i+1)+'">'+svg('suara')+'</button>'+
-        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='video')?' has':'')+'" data-lnk="video" data-i="'+i+'" title="Tambah link video" aria-label="Tambah link video nomor '+(i+1)+'">'+svg('video')+'</button>'+
-        '<button type="button" class="ib'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?' has':'')+'" data-img="'+i+'" title="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti gambar':'Tambah gambar')+'" aria-label="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
-        '<button type="button" class="ib del" data-rm="'+i+'" aria-label="Hapus nomor '+(i+1)+'">'+svg('trash')+'</button></div>'+
+        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='suara')?' has':'')+'" data-lnk="suara" data-i="'+i+'" data-tip="Tambah link suara" aria-label="Tambah link suara nomor '+(i+1)+'">'+svg('suara')+'</button>'+
+        '<button type="button" class="ib'+((s.gambar&&!s._prev&&kindOf(s.gambar)==='video')?' has':'')+'" data-lnk="video" data-i="'+i+'" data-tip="Tambah link video" aria-label="Tambah link video nomor '+(i+1)+'">'+svg('video')+'</button>'+
+        '<button type="button" class="ib'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?' has':'')+'" data-img="'+i+'" data-tip="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti gambar':'Tambah gambar')+'" aria-label="'+((s._prev||(s.gambar&&kindOf(s.gambar)==='image'))?'Ganti':'Tambah')+' gambar nomor '+(i+1)+'">'+svg('image')+'</button>'+
+        '<button type="button" class="ib del" data-rm="'+i+'" data-tip="Hapus soal" aria-label="Hapus nomor '+(i+1)+'">'+svg('trash')+'</button></div>'+
         '<textarea data-f="teks" maxlength="1000" placeholder="'+(s.tipe==='tts'?'Petunjuk / pertanyaan untuk kotak ini…':s.tipe==='bs'?'Tulis pernyataan di sini…':'Tulis pertanyaan di sini…')+'" aria-label="Pertanyaan '+(i+1)+'">'+esc(s.teks)+'</textarea>'+gbrHtml(s,i);
       if(s.tipe==='pg'){
         h+='<div class="opts">'+s.opsi.map(function(o,j){
