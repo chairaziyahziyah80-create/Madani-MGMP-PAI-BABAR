@@ -79,7 +79,8 @@ html,body{overflow-x:hidden}
 
 
 @media (max-width:520px){.acct div{display:none}.acct{padding:3px}.wrap{padding:16px 5px}.nav{padding-left:5px;padding-right:5px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (hover:none){.mcard:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){.mcard:hover,.mcard:focus-within{transform:none}*{transition:none!important}}
 
 
 /* ===== Halaman Profil ===== */
@@ -267,6 +268,73 @@ html.mlock{overflow:hidden}
   .pt-fb body,.pt-fb .wrap{animation:none!important}
   .pt-fb.pt-out body{transition:none}
 }
+
+/* ===== Tab kelas + Card modul ajar ===== */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:6px;margin:0 0 16px;border-radius:99px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 .5px var(--line);scrollbar-width:none;-webkit-overflow-scrolling:touch;width:fit-content;max-width:100%}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;padding:8px 8px 8px 16px;border-radius:99px;color:var(--muted);transition:background .2s,color .2s,box-shadow .2s,transform .2s}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.7)}
+.tab:active{transform:scale(.96)}
+.tab .n{font-size:11.5px;font-weight:800;min-width:24px;text-align:center;padding:2px 8px;border-radius:99px;background:var(--track);color:var(--muted);transition:background .2s,color .2s}
+.tab[aria-selected="true"]{background:linear-gradient(135deg,#12a05f,#22c27a);color:#fff;box-shadow:0 6px 16px rgba(18,160,95,.38)}
+.tab[aria-selected="true"] .n{background:rgba(255,255,255,.28);color:#fff}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.mcard{--c1:#12a05f;--c2:#22c27a;position:relative;display:flex;flex-direction:column;gap:14px;padding:18px 18px 14px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(255,255,255,.8));
+  box-shadow:0 0 0 .5px var(--line),0 6px 18px rgba(30,60,50,.08);
+  animation:cardIn .45s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*45ms);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.mcard::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.mcard::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--c1),transparent 70%);opacity:.12;pointer-events:none;transition:opacity .25s,transform .25s}
+.mcard:hover,.mcard:focus-within{transform:translateY(-6px) scale(1.04);z-index:2;box-shadow:0 0 0 .5px var(--line),0 18px 36px rgba(30,60,50,.18)}
+.mcard:hover::after{opacity:.22;transform:scale(1.15)}
+.mcard .ico{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.mcard:hover .ico{transform:scale(1.12) rotate(-4deg)}
+.mcard.sel{box-shadow:0 0 0 2px var(--c1),0 12px 28px rgba(30,60,50,.16)}
+.mcard .top{display:flex;align-items:center;gap:12px}
+.mcard .ico{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 6px 14px color-mix(in srgb,var(--c1) 40%,transparent)}
+.mcard .ico svg{width:23px;height:23px}
+.mcard .meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mcard .kls{align-self:flex-start;background:color-mix(in srgb,var(--c1) 15%,white);color:color-mix(in srgb,var(--c1) 75%,black)}
+.mcard .mid{font-size:11.5px;font-weight:700;color:var(--muted)}
+.mcard h3{font-size:16px;line-height:1.4;letter-spacing:-.015em;font-weight:800;flex:1;min-height:3.9em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mcard .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:.5px dashed rgba(0,0,0,.14)}
+.mcard .go{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#fff;padding:8px 14px;border-radius:99px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 4px 12px color-mix(in srgb,var(--c1) 38%,transparent);transition:transform .2s,box-shadow .2s,filter .2s}
+.mcard .go:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 8px 18px color-mix(in srgb,var(--c1) 45%,transparent)}
+.mcard .go svg{width:15px;height:15px;transition:transform .2s}
+.mcard .go:hover svg{transform:translate(2px,-2px)}
+.mcard .acts{display:flex;gap:2px;margin-right:-6px}
+.cards .empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:44px 16px;border-radius:20px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line);border:1px dashed rgba(0,0,0,.12)}
+.cards .empty .eico{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--track);color:var(--muted)}
+.cards .empty .eico svg{width:28px;height:28px}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mcard{animation:none}.mcard,.tab,.mcard .go{transition:none}}
+@media (max-width:640px){
+  .tabs{width:100%;border-radius:16px;padding:5px;margin-bottom:12px}
+  .tab{font-size:12.5px;padding:7px 7px 7px 13px}
+  /* smartphone: 3 kolom, card kecil, turun ke bawah jika kurang */
+  main.wrap>.panel.box{padding:10px}
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .mcard{padding:12px 7px 8px;gap:8px;border-radius:14px;text-align:center}
+  .mcard::before{height:4px}
+  .mcard:hover,.mcard:focus-within{transform:none}
+  .mcard .top{flex-direction:column;gap:6px}
+  .mcard .ico{width:34px;height:34px;border-radius:11px}
+  .mcard .ico svg{width:18px;height:18px}
+  .mcard .meta{align-items:center}
+  .mcard .kls{align-self:center;font-size:10px;padding:2px 7px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mcard .mid{display:none}
+  .mcard h3{font-size:11.5px;line-height:1.3;min-height:0;-webkit-line-clamp:4;word-break:break-word}
+  .mcard .foot{flex-direction:column;gap:6px;padding-top:8px}
+  .mcard .go{width:100%;justify-content:center;font-size:11px;padding:6px 4px}
+  .mcard .go svg{display:none}
+  .mcard .acts{width:100%;justify-content:center;margin:0;gap:0}
+  .mcard .ib{width:26px;height:26px;border-radius:8px}
+  .mcard .ib svg{width:15px;height:15px}
+  .mcard .ib[data-tip]::after,.mcard .ib[data-tip]::before{display:none}
+}
+@media (max-width:339px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <script>
 /* Transisi halaman: halaman baru "keluar" dari tombol yang diklik (seperti membuka jendela dari Dock macOS);
@@ -356,16 +424,11 @@ html.mlock{overflow:hidden}
     <div class="listhead">
       <div><h2>Daftar Modul Ajar</h2></div>
       <div class="tools">
-        <select id="fKelas" aria-label="Filter kelas"><option value="">Semua kelas</option></select>
         <div class="fld search"><input id="q" type="search" placeholder="Cari modul ajar…" aria-label="Cari modul ajar"></div>
       </div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Nama Modul Ajar</th><th>Kelas</th><th>Link Modul</th><th class="act">Aksi</th></tr></thead>
-        <tbody id="tb"><tr><td colspan="5" class="empty">Memuat…</td></tr></tbody>
-      </table>
-    </div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Filter kelas"></div>
+    <div class="cards" id="tb" role="tabpanel"><div class="empty">Memuat…</div></div>
   </section>
 </main>
 
@@ -443,7 +506,8 @@ html.mlock{overflow:hidden}
     edit:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4zM13.5 6.5l4 4"/>',
     dup:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
     trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M9 7V4h6v3"/>',
-    ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>'
+    ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>',
+    book:'<path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5v-15zM4 20.5A2.5 2.5 0 006.5 18H20v3H6.5A2.5 2.5 0 014 20.5zM9 7.5h7M9 11h5"/>'
   };
   function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+P[n]+'</svg>';}
   document.querySelectorAll('[data-i]').forEach(function(e){e.innerHTML=svg(e.dataset.i);});
@@ -550,31 +614,50 @@ html.mlock{overflow:hidden}
     else if(!e.shiftKey&&cur===z){e.preventDefault();a.focus();}
   });
 
-  /* ---------- Tabel ---------- */
+  /* ---------- Tab kelas + Card ---------- */
+  var curTab='',kelasList=[];
   function fillFilter(){
-    var sel=$('fKelas'),cur=sel.value;
     var ks=[];rows.forEach(function(r){if(r.kelas&&ks.indexOf(r.kelas)<0)ks.push(r.kelas);});
     ks.sort(function(a,b){return a.localeCompare(b,'id',{numeric:true});});
-    sel.innerHTML='<option value="">Semua kelas</option>'+ks.map(function(k){return '<option value="'+esc(k)+'">'+esc(k)+'</option>';}).join('');
-    sel.value=ks.indexOf(cur)>-1?cur:'';
+    kelasList=ks;
+    if(curTab&&ks.indexOf(curTab)<0)curTab='';
     return ks.length;
   }
+  function renderTabs(){
+    var cnt={};rows.forEach(function(r){cnt[r.kelas]=(cnt[r.kelas]||0)+1;});
+    var items=[{k:'',label:'Semua',n:rows.length}].concat(kelasList.map(function(k){return {k:k,label:k,n:cnt[k]||0};}));
+    $('tabs').innerHTML=items.map(function(t){
+      return '<button type="button" class="tab" role="tab" data-k="'+esc(t.k)+'" aria-selected="'+(t.k===curTab)+'">'+esc(t.label)+'<span class="n">'+t.n+'</span></button>';
+    }).join('');
+    var on=$('tabs').querySelector('[aria-selected="true"]');
+    if(on&&on.scrollIntoView)on.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
+  var PAL=[['#12a05f','#2fd08a'],['#0a84ff','#5ac8fa'],['#ff9f0a','#ffcf4a'],['#af52de','#d98cf5'],['#ff375f','#ff8aa1'],['#00b8a9','#5eead4']];
+  function emptyBox(msg){return '<div class="empty"><span class="eico">'+svg('book')+'</span><span>'+msg+'</span></div>';}
   function render(){
-    var q=$('q').value.trim().toLowerCase(),fk=$('fKelas').value;
+    var q=$('q').value.trim().toLowerCase();
+    renderTabs();
     var list=rows.filter(function(r){
-      return (!fk||r.kelas===fk)&&(!q||(r.nama_modul_ajar||'').toLowerCase().indexOf(q)>-1||(r.kelas||'').toLowerCase().indexOf(q)>-1);
+      return (!curTab||r.kelas===curTab)&&(!q||(r.nama_modul_ajar||'').toLowerCase().indexOf(q)>-1||(r.kelas||'').toLowerCase().indexOf(q)>-1);
     });
     var tb=$('tb');
-    if(!list.length){tb.innerHTML='<tr><td colspan="5" class="empty">'+(rows.length?'Tidak ada modul ajar yang cocok.':'Belum ada modul ajar. Tekan Baru untuk menambahkan.')+'</td></tr>';}
+    if(!list.length){tb.innerHTML=emptyBox(rows.length?'Tidak ada modul ajar yang cocok.':'Belum ada modul ajar. Tekan Baru untuk menambahkan.');}
     else{
-      tb.innerHTML=list.map(function(r){
+      tb.innerHTML=list.map(function(r,i){
         var href=isUrl(r.link_modul)?esc(r.link_modul):'#';
-        return '<tr class="'+(r.id===editId?'sel':'')+'"><td>'+r.id+'</td><td><b>'+esc(r.nama_modul_ajar)+'</b></td>'+
-          '<td><span class="kls">'+esc(r.kelas)+'</span></td>'+
-          '<td><a class="lnk" href="'+href+'" target="_blank" rel="noopener noreferrer" title="'+esc(r.link_modul)+'">'+svg('ext')+'<span>Buka modul</span></a></td>'+
-          '<td class="act"><button type="button" class="ib" data-act="edit" data-id="'+r.id+'" data-tip="Ubah" aria-label="Ubah '+esc(r.nama_modul_ajar)+'">'+svg('edit')+'</button>'+
-          '<button type="button" class="ib" data-act="dup" data-id="'+r.id+'" data-tip="Duplikat" aria-label="Duplikat '+esc(r.nama_modul_ajar)+'">'+svg('dup')+'</button>'+
-          '<button type="button" class="ib del" data-act="del" data-id="'+r.id+'" data-tip="Hapus" aria-label="Hapus '+esc(r.nama_modul_ajar)+'">'+svg('trash')+'</button></td></tr>';
+        var ci=kelasList.indexOf(r.kelas),c=PAL[(ci<0?0:ci)%PAL.length];
+        return '<article class="mcard'+(r.id===editId?' sel':'')+'" style="--c1:'+c[0]+';--c2:'+c[1]+';--i:'+Math.min(i,12)+'">'+
+          '<div class="top"><span class="ico">'+svg('book')+'</span>'+
+            '<div class="meta"><span class="kls">'+esc(r.kelas)+'</span><span class="mid">ID '+r.id+'</span></div></div>'+
+          '<h3 title="'+esc(r.nama_modul_ajar)+'">'+esc(r.nama_modul_ajar)+'</h3>'+
+          '<div class="foot">'+
+            '<a class="go" href="'+href+'" target="_blank" rel="noopener noreferrer" title="'+esc(r.link_modul)+'"><span>Buka modul</span>'+svg('ext')+'</a>'+
+            '<div class="acts">'+
+              '<button type="button" class="ib" data-act="edit" data-id="'+r.id+'" data-tip="Ubah" aria-label="Ubah '+esc(r.nama_modul_ajar)+'">'+svg('edit')+'</button>'+
+              '<button type="button" class="ib" data-act="dup" data-id="'+r.id+'" data-tip="Duplikat" aria-label="Duplikat '+esc(r.nama_modul_ajar)+'">'+svg('dup')+'</button>'+
+              '<button type="button" class="ib del" data-act="del" data-id="'+r.id+'" data-tip="Hapus" aria-label="Hapus '+esc(r.nama_modul_ajar)+'">'+svg('trash')+'</button>'+
+            '</div>'+
+          '</div></article>';
       }).join('');
     }
     $('stBuku').textContent=rows.length+' modul ajar';
@@ -593,7 +676,7 @@ html.mlock{overflow:hidden}
       setBusy(false);return true;
     }catch(e){
       rows=[];render();
-      $('tb').innerHTML='<tr><td colspan="5" class="empty">Gagal memuat data. Pastikan tabel "modulajar" sudah dibuat di Supabase.</td></tr>';
+      $('tb').innerHTML=emptyBox('Gagal memuat data. Pastikan tabel "modulajar" sudah dibuat di Supabase.');
       toast('Gagal memuat: '+(e.message||e),'err');
       setBusy(false);return false;
     }
@@ -631,7 +714,7 @@ html.mlock{overflow:hidden}
     setBusy(false);
   });
 
-  /* ---------- Aksi tabel ---------- */
+  /* ---------- Aksi card ---------- */
   $('tb').addEventListener('click',async function(ev){
     var b=ev.target.closest('button[data-act]');if(!b||busy)return;
     var id=+b.dataset.id;
@@ -711,7 +794,10 @@ html.mlock{overflow:hidden}
   });
 
   $('q').addEventListener('input',render);
-  $('fKelas').addEventListener('change',render);
+  $('tabs').addEventListener('click',function(ev){
+    var t=ev.target.closest('.tab');if(!t)return;
+    curTab=t.dataset.k;render();
+  });
   $('bNew').addEventListener('click',function(){resetForm();openModal();});
   $('bRefresh').addEventListener('click',function(){Promise.all([load(),loadKelas()]).then(function(a){if(a[0])toast('Data terbaru ditampilkan.','ok');});});
 
