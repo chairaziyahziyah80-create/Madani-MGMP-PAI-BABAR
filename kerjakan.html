@@ -327,7 +327,7 @@ async function simpanKeNilaiKelas(nilai){
 
 async function submit(){
   if(busy||finished)return;busy=true;clearInterval(timer);hideWarn();lockOff();
-  app.innerHTML='<div class="card st"><h2>'+(timeUp?'Waktu habis':lockOut?'Ujian dikunci':'Mengirim jawaban…')+'</h2><p>'+(timeUp||lockOut?'Jawaban yang sudah kamu isi sedang dikirim. Jangan tutup halaman ini.':'Jangan tutup halaman ini.')+'</p></div>';
+  app.innerHTML='<div class="card st"><h2>'+(timeUp?'Waktu habis':cutR?'Ujian dihentikan pengawas':lockOut?'Ujian dikunci':'Mengirim jawaban…')+'</h2><p>'+(timeUp||lockOut?'Jawaban yang sudah kamu isi sedang dikirim. Jangan tutup halaman ini.':'Jangan tutup halaman ini.')+'</p></div>';
   $('tm').hidden=true;document.querySelector('.bar')&&document.querySelector('.bar').remove();
   let skor=null,maks=0,essay=false,benar=0;
   try{
@@ -357,7 +357,7 @@ async function submit(){
   let nl=null;
   if(!dup&&nilai!==null){try{nl=await simpanKeNilaiKelas(nilai);}catch(e){nl={ok:false,msg:(e&&e.message)||String(e)};}}
   finished=true;
-  liveSync({status_ujian:'Selesai',waktu_selesai:new Date().toISOString(),jumlah_pelanggaran:st.viol||0,status_kecurangan:kecurangan(st.viol||0)});
+  if(!cutR)liveSync({status_ujian:'Selesai',waktu_selesai:new Date().toISOString(),jumlah_pelanggaran:st.viol||0,status_kecurangan:kecurangan(st.viol||0)});
   await Promise.race([liveP,new Promise(r=>setTimeout(r,3000))]);
   if(saved){try{localStorage.removeItem(KEY);}catch(_){}try{sessionStorage.removeItem('madani_asesmen');}catch(_){}}
   done({nilai:nilai,skor_otomatis:skor,skor_maks:maks,perlu_koreksi:essay},false,saved,nl);
@@ -365,7 +365,7 @@ async function submit(){
 function done(r,already,saved,nl){
   finished=true;$('tm').hidden=true;const bar=document.querySelector('.bar');if(bar)bar.remove();
   let h='<div class="card st"><h2>'+(already?'Kamu sudah mengerjakan asesmen ini':'Jawaban terkirim ✓')+'</h2>';
-  if(lockOut&&!already)h+='<p style="color:var(--red);margin-bottom:6px">Ujian dikunci karena pelanggaran mencapai batas ('+LOCK.MAX+'x). Jawaban terkirim otomatis.</p>';
+  if(lockOut&&!already)h+='<p style="color:var(--red);margin-bottom:6px">'+(cutR?'Ujian dihentikan oleh pengawas. Alasan: '+String(cutR).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';')+'. Jawaban terkirim otomatis.':'Ujian dikunci karena pelanggaran mencapai batas ('+LOCK.MAX+'x). Jawaban terkirim otomatis.')+'</p>';
   if(SHOW_NILAI&&r.nilai!=null){
     h+='<div class="big">'+r.nilai+'</div><p>Skor '+r.skor_otomatis+' dari '+r.skor_maks+(P&&P.kkm!=null?' · KKM '+P.kkm:'')+'</p>';
     if(r.perlu_koreksi)h+='<p style="margin-top:6px">Nilai sementara. Soal uraian akan dinilai oleh gurumu.</p>';
@@ -486,7 +486,7 @@ function lockBind(){
 }
 
 /* ====== Pantauan ujian: tabel ujianberlangsung ====== */
-let liveP=Promise.resolve();
+let liveP=Promise.resolve(),cutR='';
 const liveKey=()=>({soal_aktif_id:String(A.id),siswa_id:String(sess.id)});
 const kecurangan=v=>v>=LOCK.MAX?'Curang (terkunci)':v>0?'Mencurigakan':'Aman';
 function liveLog(r){if(r&&r.error)console.warn('ujianberlangsung:',r.error.message);}
@@ -496,6 +496,19 @@ function liveStart(){
     waktu_mulai:new Date(st.mulai).toISOString(),jumlah_pelanggaran:v,status_kecurangan:kecurangan(v)});
   /* ignoreDuplicates: kalau siswa melanjutkan ujian (reload), baris lama tidak ditimpa */
   liveP=liveP.then(()=>db.from('ujianberlangsung').upsert(rec,{onConflict:'soal_aktif_id,siswa_id',ignoreDuplicates:true})).then(liveLog).catch(()=>{});
+  setInterval(livePoll,6000);
+}
+/* Pengawas menekan "Cut Ujian": baris berubah Selesai + status mengandung "pengawas" -> kirim jawaban & hentikan */
+async function livePoll(){
+  if(finished||busy||cutR)return;
+  try{
+    const r=await db.from('ujianberlangsung').select('status_ujian,status_kecurangan,alasan_terakhir').match(liveKey()).maybeSingle();
+    const d=r.data;
+    if(d&&d.status_ujian==='Selesai'&&/pengawas/i.test(d.status_kecurangan||'')){
+      cutR=d.alasan_terakhir||'Pelanggaran tata tertib ujian';lockOut=true;
+      toast('Ujian dihentikan oleh pengawas. Jawaban dikirim otomatis.');submit();
+    }
+  }catch(_){}
 }
 function liveSync(patch){
   liveP=liveP.then(()=>db.from('ujianberlangsung').update(patch).match(liveKey())).then(liveLog).catch(()=>{});
