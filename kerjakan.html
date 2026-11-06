@@ -70,6 +70,15 @@ textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba
 @keyframes wmf{from{opacity:0}}
 @keyframes wmp{from{opacity:0;transform:scale(.86) translateY(10px)}}
 @media (prefers-reduced-motion:reduce){.wm.show,.wb{animation:none}.wr .p{transition:none}}
+/* ===== AXAM LOCK MODE ===== */
+body.locked{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.locked textarea,body.locked .cell{-webkit-user-select:text;user-select:text}
+.lk{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,24,17,.97)}
+.lk.show{display:flex}
+.lb{width:100%;max-width:400px;text-align:center;padding:26px 22px 22px;border-radius:22px;background:#fff;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.lb .li{font-size:44px;line-height:1}.lb h2{font-size:20px;margin:8px 0 6px}.lb p{font-size:14px;color:var(--muted)}.lb .lc{margin-top:10px;font-weight:700;color:var(--red)}.lb .bt{margin-top:18px}
+.gate{max-width:480px;margin:6vh auto 0}.gate .gi{font-size:48px;line-height:1}.gate .gl{text-align:left;margin:16px 0 0 18px;font-size:14px;color:var(--text)}.gate .gl li{margin-bottom:6px}
+@media print{body{display:none!important}}
 </style>
 </head>
 <body>
@@ -80,6 +89,7 @@ textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba
 <h2 id="wmT">Waktu Anda tinggal 1 Menit Lagi</h2>
 <p id="wmD">Pastikan Anda menyelesaikan Tes sebelum waktu berakhir. Jawaban dikirim otomatis saat waktu habis.</p>
 <button class="bt pri full" id="wmB" type="button">Lanjut Mengerjakan</button></div></div>
+<div class="lk" id="lk" role="alertdialog" aria-modal="true" aria-labelledby="lkT" aria-describedby="lkR"><div class="lb"><div class="li">⚠️</div><h2 id="lkT">AXAM LOCK MODE</h2><p id="lkR"></p><p class="lc" id="lkC"></p><button class="bt pri full" id="lkB" type="button">Kembali ke Ujian</button></div></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -139,9 +149,12 @@ async function init(){
 
     KEY='madani_kerja_'+A.id+'_'+sess.id;
     try{st=JSON.parse(localStorage.getItem(KEY)||'null');}catch(_){}
-    if(!st)st={mulai:now,ans:{},flag:{},cur:0,viol:0};
-    deadline=Math.min(st.mulai+A.durasi_menit*60000,new Date(A.selesai).getTime());
-    save();start();
+    gate(!st,()=>{
+      if(!st)st={mulai:Date.now(),ans:{},flag:{},cur:0,viol:0};
+      deadline=Math.min(st.mulai+A.durasi_menit*60000,new Date(A.selesai).getTime());
+      const was=st.lock;st.lock=true;save();start();lockStart();liveStart();
+      if(was)violate('Halaman ditutup atau dimuat ulang',true);
+    });
   }catch(e){
     const m=(e&&e.message)||String(e);
     msg('Gagal memuat soal',/permission denied/i.test(m)?'Akses data ditolak. Hubungi guru.':m,'Kembali',BACK);
@@ -165,7 +178,6 @@ function start(){
   $('qc').addEventListener('keydown',onKey);$('qc').addEventListener('paste',onPaste);
   tick();timer=setInterval(tick,1000);render();
   window.addEventListener('beforeunload',e=>{if(!finished){e.preventDefault();e.returnValue='';}});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden&&!finished){st.viol++;save();toast('Kamu meninggalkan halaman ujian. Hal ini dicatat.');}});
 }
 
 function go(i){if(i<0||i>=Q.length)return;st.cur=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
@@ -283,7 +295,7 @@ function ask(){
   let t='Kirim jawaban sekarang?';
   if(k)t='Masih ada '+k+' soal yang belum dijawab.\n'+t;
   if(f)t+='\n('+f+' soal masih ditandai ragu-ragu)';
-  if(confirm(t+'\nSetelah dikirim, jawaban tidak dapat diubah.'))submit();
+  if(lockConfirm(t+'\nSetelah dikirim, jawaban tidak dapat diubah.'))submit();
 }
 
 /* ---------- Simpan nilai ke tabel nilai_kelas_<kelas> ---------- */
@@ -314,8 +326,8 @@ async function simpanKeNilaiKelas(nilai){
 }
 
 async function submit(){
-  if(busy||finished)return;busy=true;clearInterval(timer);hideWarn();
-  app.innerHTML='<div class="card st"><h2>'+(timeUp?'Waktu habis':'Mengirim jawaban…')+'</h2><p>'+(timeUp?'Jawaban yang sudah kamu isi sedang dikirim. Jangan tutup halaman ini.':'Jangan tutup halaman ini.')+'</p></div>';
+  if(busy||finished)return;busy=true;clearInterval(timer);hideWarn();lockOff();
+  app.innerHTML='<div class="card st"><h2>'+(timeUp?'Waktu habis':lockOut?'Ujian dikunci':'Mengirim jawaban…')+'</h2><p>'+(timeUp||lockOut?'Jawaban yang sudah kamu isi sedang dikirim. Jangan tutup halaman ini.':'Jangan tutup halaman ini.')+'</p></div>';
   $('tm').hidden=true;document.querySelector('.bar')&&document.querySelector('.bar').remove();
   let skor=null,maks=0,essay=false,benar=0;
   try{
@@ -345,12 +357,15 @@ async function submit(){
   let nl=null;
   if(!dup&&nilai!==null){try{nl=await simpanKeNilaiKelas(nilai);}catch(e){nl={ok:false,msg:(e&&e.message)||String(e)};}}
   finished=true;
+  liveSync({status_ujian:'Selesai',waktu_selesai:new Date().toISOString(),jumlah_pelanggaran:st.viol||0,status_kecurangan:kecurangan(st.viol||0)});
+  await Promise.race([liveP,new Promise(r=>setTimeout(r,3000))]);
   if(saved){try{localStorage.removeItem(KEY);}catch(_){}try{sessionStorage.removeItem('madani_asesmen');}catch(_){}}
   done({nilai:nilai,skor_otomatis:skor,skor_maks:maks,perlu_koreksi:essay},false,saved,nl);
 }
 function done(r,already,saved,nl){
   finished=true;$('tm').hidden=true;const bar=document.querySelector('.bar');if(bar)bar.remove();
   let h='<div class="card st"><h2>'+(already?'Kamu sudah mengerjakan asesmen ini':'Jawaban terkirim ✓')+'</h2>';
+  if(lockOut&&!already)h+='<p style="color:var(--red);margin-bottom:6px">Ujian dikunci karena pelanggaran mencapai batas ('+LOCK.MAX+'x). Jawaban terkirim otomatis.</p>';
   if(SHOW_NILAI&&r.nilai!=null){
     h+='<div class="big">'+r.nilai+'</div><p>Skor '+r.skor_otomatis+' dari '+r.skor_maks+(P&&P.kkm!=null?' · KKM '+P.kkm:'')+'</p>';
     if(r.perlu_koreksi)h+='<p style="margin-top:6px">Nilai sementara. Soal uraian akan dinilai oleh gurumu.</p>';
@@ -360,6 +375,132 @@ function done(r,already,saved,nl){
   if(nl&&!nl.ok)h+='<p style="color:var(--red);margin-top:10px">Jawabanmu sudah terkirim, tetapi nilai belum masuk ke tabel nilai kelas: '+esc(nl.msg)+' Hubungi gurumu.</p>';
   app.innerHTML=h+'<a class="bt pri" href="'+BACK+'">Kembali ke Asesmen</a></div>';
 }
+
+/* ================= AXAM LOCK MODE =================
+   Catatan: web/PWA tidak bisa mengunci perangkat. Modul ini memaksa layar penuh,
+   mendeteksi pelanggaran, mengunci tampilan, lalu auto-kirim di pelanggaran ke-MAX. */
+const LOCK={MAX:3,DELAY:4,GRACE:1500,BLUR_MS:900};
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+const fsCan=()=>!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+const fsReq=()=>{const e=document.documentElement,f=e.requestFullscreen||e.webkitRequestFullscreen;return f?Promise.resolve(f.call(e)):Promise.reject(new Error('nofs'));};
+let lockOn=false,lockOpen=false,lockPause=false,lockFs=false,lockBound=false,lockOut=false;
+let lockGrace=0,lockLast=0,lockWL=null,lockBlurT=null,lockRT=null;
+
+async function wake(){
+  if(!('wakeLock' in navigator)||lockWL)return;
+  try{const w=await navigator.wakeLock.request('screen');lockWL=w;w.addEventListener('release',()=>{if(lockWL===w)lockWL=null;});}catch(_){}
+}
+async function lockEnter(){
+  lockGrace=Date.now()+LOCK.GRACE;
+  try{await fsReq();lockFs=true;}catch(_){}
+  try{if(navigator.keyboard&&navigator.keyboard.lock)navigator.keyboard.lock(['Escape']).catch(()=>{});}catch(_){}
+  await wake();
+  lockGrace=Date.now()+LOCK.GRACE;
+}
+function lockOff(){
+  lockOn=false;lockOpen=false;clearTimeout(lockBlurT);clearInterval(lockRT);
+  $('lk').classList.remove('show');document.body.classList.remove('locked');
+  try{if(lockWL)lockWL.release();}catch(_){}lockWL=null;
+  try{if(navigator.keyboard&&navigator.keyboard.unlock)navigator.keyboard.unlock();}catch(_){}
+  try{if(fsEl()){const x=document.exitFullscreen||document.webkitExitFullscreen;Promise.resolve(x.call(document)).catch(()=>{});}}catch(_){}
+}
+function lockStart(){
+  lockOn=true;document.body.classList.add('locked');
+  try{history.pushState(null,'',location.href);}catch(_){}
+  lockBind();
+}
+function showLock(reason,soft){
+  lockOpen=true;
+  $('lkR').textContent=reason+'.';
+  $('lkC').textContent=soft?'Tidak dihitung sebagai pelanggaran.':'Pelanggaran '+st.viol+' dari '+LOCK.MAX+'. Pada pelanggaran ke-'+LOCK.MAX+' jawabanmu dikirim otomatis dan ujian dikunci.';
+  const b=$('lkB');let d=soft?0:LOCK.DELAY;
+  const label=()=>{b.disabled=d>0;b.textContent=d>0?'Kembali ke Ujian ('+d+')':'Kembali ke Ujian';};
+  label();clearInterval(lockRT);
+  if(d>0)lockRT=setInterval(()=>{d--;label();if(d<=0)clearInterval(lockRT);},1000);
+  $('lk').classList.add('show');
+}
+function violate(reason,quiet){
+  if(!lockOn||finished||busy||lockPause||lockOpen)return;
+  const n=Date.now();
+  if(!quiet&&(n<lockGrace||n-lockLast<LOCK.GRACE))return;
+  lockLast=n;st.viol=(st.viol||0)+1;save();
+  liveSync({jumlah_pelanggaran:st.viol,status_kecurangan:kecurangan(st.viol),alasan_terakhir:reason});
+  if(st.viol>=LOCK.MAX){lockOut=true;toast('Batas pelanggaran tercapai. Jawaban dikirim otomatis.');submit();return;}
+  if(quiet){toast(reason+'. Dicatat sebagai pelanggaran '+st.viol+' dari '+LOCK.MAX+'.');return;}
+  showLock(reason,false);
+}
+function lockConfirm(m){
+  lockPause=true;let r=false;
+  try{r=confirm(m);}finally{lockGrace=Date.now()+LOCK.GRACE;lockPause=false;}
+  if(!r&&lockOn&&lockFs&&!fsEl())showLock('Layar penuh perlu diaktifkan kembali',true);
+  return r;
+}
+function gate(fresh,cb){
+  $('tm').hidden=true;
+  const prev=st&&st.viol?'<li>Pelanggaran sebelumnya: <b>'+st.viol+'</b> dari '+LOCK.MAX+'.</li>':'';
+  app.innerHTML='<div class="card st gate"><div class="gi">🔒</div><h2>AXAM LOCK MODE</h2><p>'+(fresh?'Ujian berjalan dalam mode terkunci.':'Lanjutkan ujianmu. Waktu tetap berjalan sejak kamu mulai.')+'</p>'+
+    '<ul class="gl"><li>'+(fsCan()?'Layar penuh akan diaktifkan.':'Perangkat ini tidak mendukung layar penuh. Buka lewat ikon aplikasi di Layar Utama (PWA) agar lebih aman.')+'</li>'+
+    '<li>Jangan pindah tab/aplikasi, jangan keluar layar penuh, dan jangan tekan tombol Kembali.</li>'+
+    '<li>Setiap pelanggaran dicatat dan dilihat oleh gurumu. Pelanggaran ke-'+LOCK.MAX+': ujian dikunci dan jawaban dikirim otomatis.</li>'+
+    '<li>Waktu ujian tidak berhenti saat layar terkunci.</li>'+prev+'</ul>'+
+    '<button class="bt pri full" id="gB" type="button" style="margin-top:18px">'+(fresh?'Mulai Ujian':'Lanjutkan Ujian')+'</button></div>';
+  $('gB').onclick=async()=>{$('gB').disabled=true;await lockEnter();cb();};
+}
+function lockBind(){
+  if(lockBound)return;lockBound=true;
+  $('lkB').onclick=async()=>{await lockEnter();lockOpen=false;lockLast=Date.now();$('lk').classList.remove('show');};
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)violate('Kamu berpindah tab atau aplikasi');else wake();
+  });
+  window.addEventListener('blur',()=>{
+    clearTimeout(lockBlurT);
+    lockBlurT=setTimeout(()=>{
+      const a=document.activeElement;
+      if(a&&a.tagName==='IFRAME')return; /* klik pada video YouTube di dalam soal */
+      if(!document.hasFocus())violate('Halaman ujian kehilangan fokus');
+    },LOCK.BLUR_MS);
+  });
+  window.addEventListener('focus',()=>clearTimeout(lockBlurT));
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
+    if(lockOn&&lockFs&&!fsEl())violate('Kamu keluar dari layar penuh');
+  }));
+  window.addEventListener('popstate',()=>{
+    if(!lockOn)return;
+    try{history.pushState(null,'',location.href);}catch(_){}
+    violate('Kamu menekan tombol Kembali');
+  });
+  document.addEventListener('keydown',e=>{
+    if(!lockOn)return;
+    const k=String(e.key||'').toLowerCase(),c=e.ctrlKey||e.metaKey;
+    if(e.key==='F12'||(c&&e.shiftKey&&(k==='i'||k==='j'||k==='c'))||(c&&(k==='u'||k==='s'||k==='p'))){e.preventDefault();toast('Tombol ini dinonaktifkan selama ujian.');}
+  },true);
+  document.addEventListener('keyup',e=>{
+    if(lockOn&&e.key==='PrintScreen'){try{navigator.clipboard.writeText('');}catch(_){}violate('Mencoba mengambil screenshot');}
+  });
+  ['contextmenu','copy','cut','dragstart','paste'].forEach(ev=>document.addEventListener(ev,e=>{
+    if(!lockOn)return;
+    const t=e.target,edit=t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT');
+    if(edit&&(ev==='copy'||ev==='cut'))return;
+    e.preventDefault();e.stopImmediatePropagation();
+  },true));
+}
+
+/* ====== Pantauan ujian: tabel ujianberlangsung ====== */
+let liveP=Promise.resolve();
+const liveKey=()=>({soal_aktif_id:String(A.id),siswa_id:String(sess.id)});
+const kecurangan=v=>v>=LOCK.MAX?'Curang (terkunci)':v>0?'Mencurigakan':'Aman';
+function liveLog(r){if(r&&r.error)console.warn('ujianberlangsung:',r.error.message);}
+function liveStart(){
+  const v=st.viol||0;
+  const rec=Object.assign(liveKey(),{nama_siswa:ID.nama||null,kelas:ID.kelas||P.kelas||null,nama_ujian:P.judul||null,
+    waktu_mulai:new Date(st.mulai).toISOString(),jumlah_pelanggaran:v,status_kecurangan:kecurangan(v)});
+  /* ignoreDuplicates: kalau siswa melanjutkan ujian (reload), baris lama tidak ditimpa */
+  liveP=liveP.then(()=>db.from('ujianberlangsung').upsert(rec,{onConflict:'soal_aktif_id,siswa_id',ignoreDuplicates:true})).then(liveLog).catch(()=>{});
+}
+function liveSync(patch){
+  liveP=liveP.then(()=>db.from('ujianberlangsung').update(patch).match(liveKey())).then(liveLog).catch(()=>{});
+}
+
 init();
 })();
 </script>
