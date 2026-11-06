@@ -43,6 +43,8 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .mb input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#f7faf8}
 .mb .er{min-height:20px;margin-top:6px;font-size:13px;font-weight:600;color:var(--red)}.mb .nt{font-size:12.5px;color:var(--muted);margin-top:2px}
 .mb .ac{display:flex;gap:10px;margin-top:16px}.mb .ac button{flex:1;padding:11px;border-radius:12px;font-weight:800}
+.go{padding:6px 12px;border-radius:10px;background:rgba(18,160,95,.15);color:#0b7a47;font-weight:800;font-size:13px;white-space:nowrap}.go:hover{background:#0b7a47;color:#fff}.noact{font-size:12px;color:var(--muted)}
+.b3{background:#12a05f;color:#fff}.b3:disabled{opacity:.6}
 .b2{background:var(--track)}.b1{background:var(--red);color:#fff}.b1:disabled{opacity:.6}
 .toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:70;max-width:90%;padding:10px 16px;border-radius:12px;background:#0f2a1d;color:#fff;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}.toast.show{opacity:1}
 .empty{text-align:center;padding:48px 16px}.empty .ei{font-size:44px;line-height:1}.empty h3{margin-top:10px;font-size:18px}.empty p{margin-top:4px;color:var(--muted);font-size:14px}
@@ -86,8 +88,15 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   <input id="mdJ" list="jl" maxlength="120" autocomplete="off" placeholder="Pilih atau ketik jenis pelanggaran">
   <datalist id="jl"><option value="Menyontek atau bekerja sama dengan peserta lain"><option value="Membuka aplikasi atau situs lain"><option value="Menggunakan HP atau perangkat lain"><option value="Membawa catatan atau contekan"><option value="Meninggalkan ruang ujian tanpa izin"><option value="Mengganggu jalannya ujian"></datalist>
   <p class="er" id="mdE" role="alert"></p>
-  <p class="nt">Siswa langsung dikeluarkan dari ujian dan jawabannya dikirim otomatis. Datanya masuk ke tab Pelanggaran dan tidak bisa dibatalkan.</p>
+  <p class="nt">Siswa langsung dikeluarkan dari ujian dan jawabannya dikirim otomatis. Datanya masuk ke tab Pelanggaran. Selama waktu ujian belum berakhir, guru bisa menekan Lanjutkan Ujian di tab tersebut.</p>
   <div class="ac"><button class="b2" id="mdC" type="button">Batal</button><button class="b1" id="mdO" type="button">Cut Ujian</button></div>
+</div></div>
+<div class="md" id="ml" hidden><div class="mb" role="dialog" aria-modal="true" aria-labelledby="mlT">
+  <h3 id="mlT">Lanjutkan Ujian</h3><p class="si" id="mlI"></p>
+  <label>Sisa waktu siswa</label><div class="mono" id="mlS" style="font-size:24px">Memeriksa…</div>
+  <p class="er" id="mlE" role="alert"></p>
+  <p class="nt">Siswa membuka kembali ujian lewat token yang sama. Jawaban yang tadi terkirim otomatis dipulihkan ke soal, lalu dikirim ulang menggantikan data lama milik siswa ini saja. Waktu tidak ditambah dan terus berjalan sejak mulai ujian. Pelanggaran diset maksimal 2, jadi satu pelanggaran lagi mengunci ujian kembali.</p>
+  <div class="ac"><button class="b2" id="mlC" type="button">Batal</button><button class="b3" id="mlO" type="button" disabled>Lanjutkan Ujian</button></div>
 </div></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="dock"><nav aria-label="Menu">
@@ -121,7 +130,7 @@ async function load(){
   try{
     const r=await db.from('ujianberlangsung').select('*').order('waktu_mulai',{ascending:false}).range(0,999);
     if(r.error)throw r.error;
-    const data=r.data||[],ids=[...new Set(data.filter(x=>x.status_ujian==='Sedang Berlangsung').map(x=>x.soal_aktif_id))];
+    const data=r.data||[],ids=[...new Set(data.filter(x=>x.status_ujian==='Sedang Berlangsung'||(x.status_ujian==='Selesai'&&lvl(x)>=2)).map(x=>x.soal_aktif_id))];
     const A={};
     if(ids.length){const a=await db.from('soal_aktif').select('id,durasi_menit,selesai').in('id',ids);(a.data||[]).forEach(x=>A[String(x.id)]=x);}
     /* batas selesai = mulai + durasi, dibatasi jam selesai asesmen; tanpa data durasi dipakai batas 4 jam */
@@ -153,8 +162,8 @@ const TB={
     r:(x,i,now)=>nm(x,i)+'<td data-l="Batas Selesai">'+hm(x.dl)+'</td><td data-l="Sisa Waktu"><span class="mono" data-dl="'+x.dl+'">'+fmt(x.dl-now)+'</span></td>'+kb(x)+'<td data-l="Status"><span class="bd b-st">'+esc(x.status_ujian)+'</span></td><td data-l="Aksi"><button class="cut" type="button" data-id="'+esc(x.id)+'">Cut Ujian</button></td>'},
  1:{h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Waktu Selesai','Durasi','Status Kecurangan','Status Ujian'],
     r:(x,i)=>nm(x,i)+'<td data-l="Waktu Selesai">'+(x.waktu_selesai?hm(x.waktu_selesai):'-')+'</td><td data-l="Durasi"><span class="mono">'+dur(x)+'</span></td>'+kb(x)+'<td data-l="Status"><span class="bd b-dn">'+esc(x.status_ujian)+'</span></td>'},
- 2:{h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Waktu Selesai','Pelanggaran','Alasan Terakhir','Status Ujian'],
-    r:(x,i)=>nm(x,i)+'<td data-l="Waktu Selesai">'+(x.waktu_selesai?hm(x.waktu_selesai):'-')+'</td><td data-l="Pelanggaran"><span class="bd b-cr">'+(+x.jumlah_pelanggaran||0)+' kali</span></td><td data-l="Alasan">'+esc(x.alasan_terakhir||'-')+'</td><td data-l="Status"><span class="bd b-dn">'+(/pengawas/i.test(x.status_kecurangan||'')?'Dihentikan pengawas':'Selesai paksa')+'</span></td>'}
+ 2:{h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Waktu Selesai','Pelanggaran','Alasan Terakhir','Status Ujian','Aksi'],
+    r:(x,i,now)=>nm(x,i)+'<td data-l="Waktu Selesai">'+(x.waktu_selesai?hm(x.waktu_selesai):'-')+'</td><td data-l="Pelanggaran"><span class="bd b-cr">'+(+x.jumlah_pelanggaran||0)+' kali</span></td><td data-l="Alasan">'+esc(x.alasan_terakhir||'-')+'</td><td data-l="Status"><span class="bd b-dn">'+(/pengawas/i.test(x.status_kecurangan||'')?'Dihentikan pengawas':'Selesai paksa')+'</span></td><td data-l="Aksi">'+(x.dl>now?'<button class="go" type="button" data-id="'+esc(x.id)+'">Lanjutkan Ujian</button>':'<span class="noact">Waktu berakhir</span>')+'</td>'}
 };
 function render(){
   const now=Date.now(),byName=(a,b)=>String(a.nama_siswa||'').localeCompare(String(b.nama_siswa||''),'id'),byEnd=(a,b)=>new Date(b.waktu_selesai||0)-new Date(a.waktu_selesai||0);
@@ -165,7 +174,7 @@ function render(){
   L.forEach((l,i)=>{$('tc'+i).textContent=l.length;});
   NAMES.forEach((_,i)=>{const b=$('tb'+i);b.setAttribute('aria-selected',i===tab);b.tabIndex=i===tab?0:-1;});
   $('box').setAttribute('aria-labelledby','tb'+tab);
-  $('live').querySelector('#lt').textContent=(live?'Live':'Auto-refresh')+(lt?' · '+lt.toLocaleTimeString('id-ID'):'');
+  $('live').querySelector('#lt').textContent=(lt?'Diperbarui '+lt.toLocaleTimeString('id-ID')+' · klik Muat Ulang':'Memuat…');
   const l=L[tab],c=TB[tab];
   if(!l.length){$('box').innerHTML=EM[tab];return;}
   $('box').innerHTML='<table><thead><tr><th>No</th>'+c.h.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
@@ -199,23 +208,65 @@ async function cutDo(){
   }catch(e){$('mdE').textContent='Gagal: '+((e&&e.message)||e);$('mdO').disabled=false;$('mdO').textContent='Coba lagi';}
 }
 $('box').addEventListener('click',e=>{const b=e.target.closest('.cut');if(!b)return;const x=rows.find(r=>String(r.id)===b.dataset.id);if(x)cutOpen(x,b);});
+
+/* ===== Lanjutkan Ujian (siswa yang diselesaikan paksa) ===== */
+const MAXV=3; /* samakan dengan LOCK.MAX di kerjakan.html */
+let lgRow=null,lgOpener=null,lgDl=0,lgT=null;
+function lgClose(){$('ml').hidden=true;clearInterval(lgT);lgRow=null;if(lgOpener&&document.contains(lgOpener))lgOpener.focus();}
+function lgErr(m){$('mlE').textContent=m;$('mlS').textContent='-';$('mlO').disabled=true;}
+async function lgOpen(x,op){
+  lgRow=x;lgOpener=op;lgDl=0;clearInterval(lgT);
+  $('mlI').textContent=(x.nama_siswa||'-')+' · '+(x.kelas||'-')+' · '+(x.nama_ujian||'-');
+  $('mlE').textContent='';$('mlS').textContent='Memeriksa…';$('mlO').disabled=true;$('mlO').textContent='Lanjutkan Ujian';$('ml').hidden=false;
+  try{
+    /* data jadwal diambil segar agar batas waktu akurat */
+    const r=await db.from('soal_aktif').select('id,aktif,durasi_menit,selesai').eq('id',x.soal_aktif_id).maybeSingle();
+    if(r.error)throw r.error;
+    const a=r.data;if(lgRow!==x)return;
+    if(!a)return lgErr('Jadwal asesmen tidak ditemukan.');
+    if(a.aktif===false)return lgErr('Asesmen sudah dinonaktifkan, siswa tidak bisa masuk lagi.');
+    const st=new Date(x.waktu_mulai).getTime();
+    let dl=a.durasi_menit?st+a.durasi_menit*60000:st+4*3600000;
+    if(a.selesai)dl=Math.min(dl,new Date(a.selesai).getTime());
+    if(dl<=Date.now())return lgErr('Waktu ujian siswa ini sudah berakhir, tidak bisa dilanjutkan.');
+    lgDl=dl;
+    const tk=()=>{const m=lgDl-Date.now();if(m<=0){clearInterval(lgT);lgErr('Waktu ujian siswa ini sudah berakhir, tidak bisa dilanjutkan.');return;}$('mlS').textContent=fmt(m);};
+    tk();lgT=setInterval(tk,1000);$('mlO').disabled=false;$('mlO').focus();
+  }catch(e){lgErr('Gagal memeriksa: '+((e&&e.message)||e));}
+}
+async function lgDo(){
+  const x=lgRow;if(!x)return;
+  if(lgDl<=Date.now()){lgErr('Waktu ujian siswa ini sudah berakhir, tidak bisa dilanjutkan.');return;}
+  $('mlO').disabled=true;$('mlO').textContent='Memproses…';$('mlE').textContent='';
+  try{
+    const nv=Math.min(+x.jumlah_pelanggaran||0,MAXV-1),old=String(x.alasan_terakhir||'-').slice(0,100);
+    /* hanya berhasil bila baris masih berstatus Selesai (tidak bentrok dengan perubahan lain) */
+    const r=await db.from('ujianberlangsung').update({status_ujian:'Sedang Berlangsung',waktu_selesai:null,jumlah_pelanggaran:nv,
+      status_kecurangan:nv>0?'Mencurigakan':'Aman',alasan_terakhir:'Dilanjutkan guru. Sebelumnya: '+old,boleh_lanjut:true})
+      .eq('id',x.id).eq('status_ujian','Selesai').select('id');
+    if(r.error)throw r.error;
+    const ok=r.data&&r.data.length;
+    lgClose();say(ok?(x.nama_siswa||'Siswa')+' boleh melanjutkan ujian. Minta ia membuka ujian lewat token yang sama.':'Status siswa sudah berubah, muat ulang halaman.');
+    load();
+  }catch(e){
+    const m=(e&&e.message)||String(e);
+    $('mlE').textContent=/boleh_lanjut/i.test(m)?'Kolom boleh_lanjut belum ada. Jalankan ujianberlangsung_lanjut.sql di Supabase.':'Gagal: '+m;
+    $('mlO').disabled=false;$('mlO').textContent='Coba lagi';
+  }
+}
+$('box').addEventListener('click',e=>{const b=e.target.closest('.go');if(!b)return;const x=rows.find(r=>String(r.id)===b.dataset.id);if(x)lgOpen(x,b);});
+$('mlC').onclick=lgClose;$('mlO').onclick=lgDo;
+$('ml').addEventListener('click',e=>{if(e.target===$('ml'))lgClose();});
 $('mdC').onclick=cutClose;$('mdO').onclick=cutDo;
 $('md').addEventListener('click',e=>{if(e.target===$('md'))cutClose();});
 $('mdJ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();cutDo();}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('md').hidden)cutClose();});
-let live=false;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('md').hidden)cutClose();if(!$('ml').hidden)lgClose();}});
 setInterval(()=>{
   const now=Date.now();let gone=false;
   document.querySelectorAll('[data-dl]').forEach(e=>{const r=+e.dataset.dl-now;if(r<-60000)gone=true;e.textContent=fmt(r);e.classList.toggle('low',r<=300000);});
   if(gone)render();
 },1000);
-setInterval(load,15000);
 $('bR').onclick=load;
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
-try{
-  db.channel('pantau-ujian').on('postgres_changes',{event:'*',schema:'public',table:'ujianberlangsung'},()=>load())
-    .subscribe(s=>{live=s==='SUBSCRIBED';$('live').classList.toggle('on',live);if(rows.length||lt)render();});
-}catch(_){}
 nav();load();
 })();
 </script>
