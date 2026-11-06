@@ -114,7 +114,7 @@ const pid=+new URLSearchParams(location.search).get('paket');
 const KAT={UH:'Ulangan Harian',UTS:'UTS',UAS:'UAS'};
 const katLabel=p=>{const ke=+p.ke||1;return (KAT[p.kategori]||p.kategori||'')+(ke>1?' '+ke:'');};
 let ID={nama:'',nisn:'',kelas:'',kategori:''};
-let P,A,Q=[],st,KEY,deadline,timer,busy=false,finished=false,warned=false,wmPrev=null,wmTo=null,timeUp=false;
+let P,A,Q=[],st,KEY,deadline,timer,busy=false,finished=false,warned=false,wmPrev=null,wmTo=null,timeUp=false,RES=false;
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(_){}}
 const answered=i=>{const a=st.ans[i];return a!==undefined&&a!==null&&(typeof a!=='string'||a.trim()!=='');};
@@ -140,8 +140,10 @@ async function init(){
     }
     ID={nama:nama,nisn:String(nisn||''),kelas:kelas||P.kelas,kategori:katLabel(P)};
     if(norm(kelas)!==norm(P.kelas))return msg('Bukan untuk kelasmu','Asesmen ini diperuntukkan bagi kelas '+P.kelas+'.','Kembali',BACK);
-    const rh=await db.from('hasil_asesmen').select('nilai,skor_otomatis,skor_maks,perlu_koreksi').eq('soal_aktif_id',A.id).eq('siswa_id',String(sess.id)).maybeSingle();
-    if(rh.data)return done(rh.data,true);
+    const rh=await db.from('hasil_asesmen').select('nilai,skor_otomatis,skor_maks,perlu_koreksi,jawaban').eq('soal_aktif_id',A.id).eq('siswa_id',String(sess.id)).maybeSingle();
+    /* Sudah pernah terkirim (mis. diselesaikan paksa): hanya boleh masuk lagi bila guru menekan "Lanjutkan Ujian" dan waktu masih tersisa */
+    let rsm=null;
+    if(rh.data){rsm=await cekLanjut();if(!rsm)return done(rh.data,true);}
     if(now>new Date(A.selesai).getTime())return msg('Waktu habis','Asesmen ini sudah berakhir.','Kembali',BACK);
     const rb=await db.from('butir_soal').select('nomor,tipe,teks,gambar,skor,opsi,jawaban,arah').eq('paket_id',pid).order('nomor',{ascending:true}).range(0,999);
     if(rb.error)throw rb.error;Q=rb.data||[];
@@ -149,6 +151,12 @@ async function init(){
 
     KEY='madani_kerja_'+A.id+'_'+sess.id;
     try{st=JSON.parse(localStorage.getItem(KEY)||'null');}catch(_){}
+    if(rsm){
+      RES=true;
+      if(!st)st=bangunDariHasil(rh.data,rsm); /* jawaban paksa-kirim dipulihkan, waktu mulai tetap yang asli */
+      else if((st.viol||0)>=LOCK.MAX)st.viol=Math.min(+rsm.jumlah_pelanggaran||0,LOCK.MAX-1);
+      st.lanjut=true;save();
+    }
     gate(!st,()=>{
       if(!st)st={mulai:Date.now(),ans:{},flag:{},cur:0,viol:0};
       deadline=Math.min(st.mulai+A.durasi_menit*60000,new Date(A.selesai).getTime());
@@ -159,6 +167,26 @@ async function init(){
     const m=(e&&e.message)||String(e);
     msg('Gagal memuat soal',/permission denied/i.test(m)?'Akses data ditolak. Hubungi guru.':m,'Kembali',BACK);
   }
+}
+
+/* ---- Lanjutkan ujian setelah diselesaikan paksa ---- */
+async function cekLanjut(){
+  try{
+    const r=await db.from('ujianberlangsung').select('status_ujian,jumlah_pelanggaran,boleh_lanjut,waktu_mulai').match(liveKey()).maybeSingle();
+    const d=r.data;
+    if(!d||d.status_ujian!=='Sedang Berlangsung'||d.boleh_lanjut!==true)return null;
+    const m=new Date(d.waktu_mulai).getTime();if(!(m>0))return null;
+    /* sisa waktu = batas asli (mulai + durasi, maks jam selesai asesmen) dikurangi sekarang; tidak ada tambahan waktu */
+    if(Math.min(m+A.durasi_menit*60000,new Date(A.selesai).getTime())<=Date.now())return null;
+    return d;
+  }catch(_){return null;}
+}
+function bangunDariHasil(h,lv){
+  let arr=h.jawaban;if(typeof arr==='string'){try{arr=JSON.parse(arr);}catch(_){arr=[];}}
+  const by={};(Array.isArray(arr)?arr:[]).forEach(j=>{if(j)by[j.nomor]=j;});
+  const ans={};
+  Q.forEach((q,i)=>{const j=by[q.nomor];if(j&&j.tipe===q.tipe&&j.jawab!==null&&j.jawab!==undefined)ans[i]=j.jawab;});
+  return {mulai:new Date(lv.waktu_mulai).getTime(),ans:ans,flag:{},cur:0,viol:Math.min(+lv.jumlah_pelanggaran||0,LOCK.MAX-1),lanjut:true};
 }
 
 function start(){
@@ -348,7 +376,13 @@ async function submit(){
     skor_otomatis:skor,skor_maks:maks,nilai:nilai,perlu_koreksi:essay,pelanggaran:st.viol,
     mulai:new Date(st.mulai).toISOString(),dikirim:new Date().toISOString()};
   let saved=true,dup=false;
-  const r=await db.from('hasil_asesmen').insert(rec);
+  let r=await db.from('hasil_asesmen').insert(rec);
+  if(r.error&&r.error.code==='23505'&&RES){
+    /* sesi lanjutan: timpa baris kiriman paksa milik siswa ini saja (soal_aktif_id + siswa_id) dengan jawaban terbaru */
+    const up=Object.assign({},rec);delete up.soal_aktif_id;delete up.siswa_id;
+    r=await db.from('hasil_asesmen').update(up).eq('soal_aktif_id',A.id).eq('siswa_id',String(sess.id)).select('siswa_id');
+    if(!r.error&&!(r.data&&r.data.length))r={error:{message:'Jawaban terbaru belum bisa disimpan (izin update hasil_asesmen belum aktif). Jangan tutup halaman, hubungi gurumu.'}};
+  }
   if(r.error){
     if(r.error.code==='23505'){dup=true;}
     else if(r.error.code==='42P01'||/does not exist|schema cache/i.test(r.error.message||'')){saved=false;}
@@ -357,7 +391,7 @@ async function submit(){
   let nl=null;
   if(!dup&&nilai!==null){try{nl=await simpanKeNilaiKelas(nilai);}catch(e){nl={ok:false,msg:(e&&e.message)||String(e)};}}
   finished=true;
-  if(!cutR)liveSync({status_ujian:'Selesai',waktu_selesai:new Date().toISOString(),jumlah_pelanggaran:st.viol||0,status_kecurangan:kecurangan(st.viol||0)});
+  if(!cutR){const lp={status_ujian:'Selesai',waktu_selesai:new Date().toISOString(),jumlah_pelanggaran:st.viol||0,status_kecurangan:kecurangan(st.viol||0)};if(RES)lp.boleh_lanjut=false;liveSync(lp);}
   await Promise.race([liveP,new Promise(r=>setTimeout(r,3000))]);
   if(saved){try{localStorage.removeItem(KEY);}catch(_){}try{sessionStorage.removeItem('madani_asesmen');}catch(_){}}
   done({nilai:nilai,skor_otomatis:skor,skor_maks:maks,perlu_koreksi:essay},false,saved,nl);
@@ -486,6 +520,8 @@ function lockBind(){
 }
 
 /* ====== Pantauan ujian: tabel ujianberlangsung ====== */
+/* Interval cek "Cut Ujian" dari pengawas (ms). 0 = nonaktif sama sekali (tidak ada request berkala). */
+const CUT_POLL_MS=60000;
 let liveP=Promise.resolve(),cutR='';
 const liveKey=()=>({soal_aktif_id:String(A.id),siswa_id:String(sess.id)});
 const kecurangan=v=>v>=LOCK.MAX?'Curang (terkunci)':v>0?'Mencurigakan':'Aman';
@@ -496,11 +532,11 @@ function liveStart(){
     waktu_mulai:new Date(st.mulai).toISOString(),jumlah_pelanggaran:v,status_kecurangan:kecurangan(v)});
   /* ignoreDuplicates: kalau siswa melanjutkan ujian (reload), baris lama tidak ditimpa */
   liveP=liveP.then(()=>db.from('ujianberlangsung').upsert(rec,{onConflict:'soal_aktif_id,siswa_id',ignoreDuplicates:true})).then(liveLog).catch(()=>{});
-  setInterval(livePoll,6000);
+  if(CUT_POLL_MS>0)setInterval(livePoll,CUT_POLL_MS);
 }
 /* Pengawas menekan "Cut Ujian": baris berubah Selesai + status mengandung "pengawas" -> kirim jawaban & hentikan */
 async function livePoll(){
-  if(finished||busy||cutR)return;
+  if(finished||busy||cutR||document.hidden)return;
   try{
     const r=await db.from('ujianberlangsung').select('status_ujian,status_kecurangan,alasan_terakhir').match(liveKey()).maybeSingle();
     const d=r.data;
