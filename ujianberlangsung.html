@@ -23,6 +23,19 @@ a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:po
 .chip{font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;background:var(--track);color:var(--muted)}
 .live{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--muted)}.live i{width:9px;height:9px;border-radius:50%;background:#9aa;}.live.on i{background:#28c840;animation:pl 1.6s infinite}
 @keyframes pl{50%{opacity:.35}}
+.mb select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#f7faf8}.mb .fl{margin-top:12px}
+.mb.wd{max-width:560px;max-height:calc(100vh - 32px);overflow:auto}
+.mb .kc{display:flex;flex-wrap:wrap;gap:6px}.kb:disabled{opacity:.45;cursor:not-allowed}
+.mb .tr{display:flex;gap:8px}.mb .tr input{flex:1;font-family:ui-monospace,Menlo,monospace;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.mb .tr button{flex:0 0 110px;width:110px;padding:0 10px;border-radius:12px;font-weight:700;background:var(--track);white-space:nowrap;text-align:center}
+.mb h4{font-size:14px;margin:18px 0 4px}
+.mb .ac .xp{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(18,160,95,.14);color:#0b7a47;white-space:nowrap}.mb .ac .xp:disabled{opacity:.5;cursor:not-allowed}.mb .ac #mpS{flex:1.3}
+.pw{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:.5px solid var(--line)}.pw .pi{flex:1;min-width:0}.pw .pi b{display:block;font-size:14px;overflow-wrap:anywhere}.pw .pi small{color:var(--muted);font-size:12px}
+.pw .tk{flex:0 0 88px;text-align:center;font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:13px;background:var(--track);padding:0;line-height:30px;height:30px;border-radius:9px}
+.pw .sm{flex:0 0 62px;width:62px;height:30px;padding:0;border-radius:9px;font-weight:700;font-size:12px;text-align:center;background:var(--track)}.pw .sm.dl{color:#b3261e;background:rgba(255,69,58,.14)}
+.kf{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.kf[hidden]{display:none}
+.kb{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;font-weight:700;font-size:13px;background:var(--track);color:var(--muted);transition:.15s}
+.kb em{font-style:normal;font-size:11.5px;font-weight:800;min-width:20px;text-align:center;padding:1px 6px;border-radius:99px;background:rgba(0,0,0,.08)}
+.kb:hover{color:var(--text)}.kb[aria-pressed=true]{background:var(--accent);color:#fff}.kb[aria-pressed=true] em{background:rgba(255,255,255,.25)}
 .tabs{display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--track);margin-bottom:14px}
 .tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border-radius:11px;font-weight:700;font-size:14px;color:var(--muted);transition:.15s}
 .tab[aria-selected=true]{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(20,60,40,.15),0 0 0 .5px var(--line)}
@@ -61,6 +74,14 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .d[data-tip]::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translate(-50%,4px);padding:6px 11px;border-radius:8px;background:#000;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;transition:.15s}
 .d[data-tip]:hover::after,.d[data-tip]:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){.live.on i{animation:none}.d{transition:none}}
+@media(max-width:520px){.mb .tr button{flex-basis:92px;width:92px}.pw{flex-wrap:wrap;row-gap:8px}.pw .pi{flex:1 1 100%}.pw .tk{flex:1 1 0}.pw .sm{flex:0 0 72px;width:72px}.mb .ac{gap:6px}.mb .ac button{flex:1 1 auto;padding:11px 6px;font-size:12.5px;white-space:nowrap}.mb .ac #mpS{flex:1.3 1 auto}.mb .ac .xp svg{display:none}}
+@media(max-width:350px){.mb.wd{padding:18px 14px}.mb .ac{gap:4px}.mb .ac button{padding:11px 2px;font-size:11px}.mb .ac #mdC,.mb .ac #mlC,.mb .ac #mpC{flex:0.7 1 auto}}
+.rp{display:grid;gap:8px}.rp button{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;text-align:left;padding:12px 14px;border-radius:14px;background:var(--track)}
+.rp button b{font-size:14.5px}.rp button small{grid-column:1;color:var(--muted);font-size:12px;font-weight:500}
+.rp button em{grid-row:1/3;grid-column:2;font-style:normal;font-weight:800;font-size:12px;background:#fff;border-radius:99px;padding:3px 10px;min-width:34px;text-align:center}
+.rp button:hover:not(:disabled){background:rgba(18,160,95,.16)}.rp button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:460px){.dock nav{gap:4px;padding:10px 12px}.d .ic{width:46px;height:46px}.d .ic svg{width:24px;height:24px}}
+@media(max-width:360px){.d .ic{width:40px;height:40px}.d .ic svg{width:22px;height:22px}.dock nav{padding:10px}}
 </style>
 </head>
 <body>
@@ -73,6 +94,7 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 <main class="wrap">
   <section class="panel" aria-labelledby="t">
     <div class="hd"><h2 id="t">Pantau Ujian</h2><span class="live" id="live"><i></i><span id="lt">Memuat…</span></span></div>
+    <div class="kf" id="kf" role="group" aria-label="Filter kelas" hidden></div>
     <div class="tabs" role="tablist" aria-label="Status ujian">
       <button class="tab" role="tab" id="tb0" data-t="0" type="button">Berlangsung <em id="tc0">0</em></button>
       <button class="tab" role="tab" id="tb1" data-t="1" type="button">Selesai <em id="tc1">0</em></button>
@@ -98,11 +120,39 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   <p class="nt">Siswa membuka kembali ujian lewat token yang sama. Jawaban yang tadi terkirim otomatis dipulihkan ke soal, lalu dikirim ulang menggantikan data lama milik siswa ini saja. Waktu tidak ditambah dan terus berjalan sejak mulai ujian. Pelanggaran diset maksimal 2, jadi satu pelanggaran lagi mengunci ujian kembali.</p>
   <div class="ac"><button class="b2" id="mlC" type="button">Batal</button><button class="b3" id="mlO" type="button" disabled>Lanjutkan Ujian</button></div>
 </div></div>
+<div class="md" id="mp" hidden><div class="mb wd" role="dialog" aria-modal="true" aria-labelledby="mpT">
+  <h3 id="mpT">Tambah Pengawas</h3><p class="si">Pengawas hanya bisa memantau kelas yang dipilih di sini.</p>
+  <label for="mpU">Link untuk pengawas</label>
+  <div class="tr"><input id="mpU" readonly style="text-transform:none;letter-spacing:0;font-size:12px"><button id="mpUc" type="button">Salin</button></div>
+  <label for="mpN" class="fl">Nama pengawas</label>
+  <input id="mpN" maxlength="80" autocomplete="off" placeholder="Nama lengkap pengawas">
+  <label style="margin-top:12px" id="mpKl">Kelas yang diawasi</label>
+  <div class="kc" id="mpK" role="group" aria-labelledby="mpKl"><span class="noact">Memuat kelas…</span></div>
+  <label for="mpT2" style="margin-top:12px">Token akses</label>
+  <div class="tr"><input id="mpT2" maxlength="20" autocomplete="off" spellcheck="false"><button id="mpG" type="button">Buat baru</button></div>
+  <p class="nt">4 sampai 20 huruf atau angka. Pengawas yang sama dengan beberapa kelas otomatis memakai token yang sama.</p>
+  <p class="er" id="mpE" role="alert"></p>
+  <div class="ac"><button class="b2" id="mpC" type="button">Tutup</button><button class="b3" id="mpS" type="button">Simpan Pengawas</button><button class="xp" id="mpX" type="button" disabled><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"/></svg>Export PDF</button></div>
+  <h4>Pengawas terdaftar (<span id="mpCt">0</span>)</h4>
+  <div id="mpL"></div>
+</div></div>
+<div class="md" id="mr" hidden><div class="mb" role="dialog" aria-modal="true" aria-labelledby="mrT">
+  <h3 id="mrT">Cetak Laporan</h3><p class="si" id="mrI">Pilih jenis laporan yang akan diexport ke PDF.</p>
+  <div class="rp" id="mrL">
+    <button type="button" data-j="selesai"><b>Ujian Selesai</b><small>Siswa yang menyelesaikan ujian secara normal</small><em>0</em></button>
+    <button type="button" data-j="pelanggaran"><b>Pelanggaran</b><small>Siswa yang diselesaikan paksa karena pelanggaran</small><em>0</em></button>
+    <button type="button" data-j="all"><b>All</b><small>Semua data: berlangsung, selesai, dan pelanggaran</small><em>0</em></button>
+  </div>
+  <div class="ac"><button class="b2" id="mrC" type="button">Tutup</button></div>
+</div></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="dock"><nav aria-label="Menu">
   <a class="d" data-tip="Beranda" aria-label="Beranda" href="adminguru.html"><span class="ic" style="background:linear-gradient(160deg,#2fd283,#0b7a47)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7.5 9 7.5M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5"/></svg></span>Beranda</a>
   <a class="d" data-tip="Kembali ke Soal" aria-label="Kembali ke Soal" href="soal.html"><span class="ic" style="background:linear-gradient(160deg,#a78bfa,#6d28d9)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>Soal</a>
   <button class="d" id="bR" data-tip="Muat Ulang" aria-label="Muat ulang" type="button"><span class="ic" style="background:linear-gradient(160deg,#60a5fa,#1d4ed8)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.4-5.7M20 4v5h-5"/></svg></span>Muat Ulang</button>
+  <button class="d" id="bPw" data-tip="Tambah Pengawas" aria-label="Tambah pengawas" type="button"><span class="ic" style="background:linear-gradient(160deg,#fbbf24,#d97706)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>+ Pengawas</button>
+  <button class="d" id="bLk" data-tip="Salin Link Pengawas" aria-label="Salin link pengawas" type="button"><span class="ic" style="background:linear-gradient(160deg,#34d399,#0f766e)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1.5-1.5"/></svg></span>Link</button>
+  <button class="d" id="bLp" data-tip="Laporan PDF" aria-label="Cetak laporan" type="button"><span class="ic" style="background:linear-gradient(160deg,#fb7185,#be123c)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>Laporan</button>
 </nav></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -148,6 +198,12 @@ async function load(){
   busy=false;if(again){again=false;load();}
 }
 
+/* ===== Filter kelas: muncul bila ada ujian aktif dari 2 kelas atau lebih ===== */
+let kf='';
+const kelasOf=x=>String(x.kelas||'').replace(/\s+/g,' ').trim()||'Tanpa kelas';
+const ROM={I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10,XI:11,XII:12};
+const kNum=k=>{const m=/^\s*([IVX]+|\d+)\b/i.exec(k);if(!m)return 999;const t=m[1].toUpperCase();return /^\d+$/.test(t)?+t:(ROM[t]||999);};
+const kSort=(a,b)=>kNum(a)-kNum(b)||a.localeCompare(b,'id',{numeric:true});
 const lvl=x=>/curang/i.test(x.status_kecurangan||'')?2:/curiga/i.test(x.status_kecurangan||'')?1:0;
 const NAMES=['berlangsung','selesai','pelanggaran'];
 let tab=Math.max(0,NAMES.indexOf(location.hash.slice(1)));
@@ -167,8 +223,16 @@ const TB={
 };
 function render(){
   const now=Date.now(),byName=(a,b)=>String(a.nama_siswa||'').localeCompare(String(b.nama_siswa||''),'id'),byEnd=(a,b)=>new Date(b.waktu_selesai||0)-new Date(a.waktu_selesai||0);
-  const on=rows.filter(x=>x.status_ujian==='Sedang Berlangsung'&&x.dl+60000>now).sort((a,b)=>lvl(b)-lvl(a)||byName(a,b));
-  const done=rows.filter(x=>x.status_ujian==='Selesai').sort(byEnd);
+  const act=rows.filter(x=>x.status_ujian==='Sedang Berlangsung'&&x.dl+60000>now);
+  const kc={};act.forEach(x=>{const k=kelasOf(x);kc[k]=(kc[k]||0)+1;});
+  const ks=Object.keys(kc).sort(kSort),multi=ks.length>1;
+  if(!multi||ks.indexOf(kf)<0)kf='';
+  const kel=$('kf');kel.hidden=!multi;
+  if(multi)kel.innerHTML='<button class="kb" type="button" data-k="" aria-pressed="'+(kf==='')+'">Semua <em>'+act.length+'</em></button>'+
+    ks.map(k=>'<button class="kb" type="button" data-k="'+esc(k)+'" aria-pressed="'+(kf===k)+'" title="'+kc[k]+' siswa sedang mengerjakan">'+esc(k)+' <em>'+kc[k]+'</em></button>').join('');
+  const base=kf?rows.filter(x=>kelasOf(x)===kf):rows;
+  const on=base.filter(x=>x.status_ujian==='Sedang Berlangsung'&&x.dl+60000>now).sort((a,b)=>lvl(b)-lvl(a)||byName(a,b));
+  const done=base.filter(x=>x.status_ujian==='Selesai').sort(byEnd);
   /* selesai paksa = status Curang (pelanggaran mencapai batas, jawaban dikirim otomatis) */
   const L=[on,done.filter(x=>lvl(x)<2),done.filter(x=>lvl(x)>=2)];
   L.forEach((l,i)=>{$('tc'+i).textContent=l.length;});
@@ -180,6 +244,11 @@ function render(){
   $('box').innerHTML='<table><thead><tr><th>No</th>'+c.h.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
     l.map((x,i)=>'<tr class="'+(tab==0?(lvl(x)==2?'cr':lvl(x)==1?'mc':''):tab==2?'cr':'')+'">'+c.r(x,i,now)+'</tr>').join('')+'</tbody></table>';
 }
+$('kf').addEventListener('click',e=>{
+  const b=e.target.closest('.kb');if(!b)return;
+  kf=b.dataset.k;render();
+  const n=[...$('kf').querySelectorAll('.kb')].find(x=>x.dataset.k===kf);if(n)n.focus();
+});
 function setTab(i,focus){tab=i;try{history.replaceState(null,'','#'+NAMES[i]);}catch(_){}render();if(focus)$('tb'+i).focus();}
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)setTab(+b.dataset.t);});
 document.querySelector('.tabs').addEventListener('keydown',e=>{
@@ -257,10 +326,212 @@ async function lgDo(){
 $('box').addEventListener('click',e=>{const b=e.target.closest('.go');if(!b)return;const x=rows.find(r=>String(r.id)===b.dataset.id);if(x)lgOpen(x,b);});
 $('mlC').onclick=lgClose;$('mlO').onclick=lgDo;
 $('ml').addEventListener('click',e=>{if(e.target===$('ml'))lgClose();});
+
+/* ===== + Pengawas: data pengawas, kelas, dan token akses (tabel pengawas_ujian) ===== */
+const kn=k=>String(k||'').replace(/\s+/g,' ').trim();
+let pw=[],mpOpener=null,mpSel=new Set(),mpKelas=[],mpTouched=false,mpPre=false,mpBusy=false,mpReady=false;
+const genTok=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(6);crypto.getRandomValues(b);return [...b].map(v=>a[v%32]).join('');};
+const mpErr=m=>{$('mpE').textContent=m||'';};
+const mpNoTbl=e=>e&&(e.code==='42P01'||e.code==='42703'||e.code==='PGRST205'||e.code==='PGRST204'||/does not exist|schema cache|could not find/i.test((e&&e.message)||''));
+const MP_SQL='Tabel pengawas_ujian belum dibuat atau belum punya kolom link. Jalankan ulang pengawas_ujian.sql di Supabase.';
+function mpClose(){$('mp').hidden=true;if(mpOpener&&document.contains(mpOpener))mpOpener.focus();}
+function mpTaken(){const n=kn($('mpN').value).toLowerCase();return new Set(n?pw.filter(p=>p.nama.toLowerCase()===n).map(p=>p.kelas):[]);}
+function mpChips(){
+  const tk=mpTaken();tk.forEach(k=>mpSel.delete(k));
+  $('mpK').innerHTML=mpKelas.length?mpKelas.map(k=>'<button class="kb" type="button" data-k="'+esc(k)+'" aria-pressed="'+mpSel.has(k)+'"'+(tk.has(k)?' disabled title="Sudah terdaftar untuk pengawas ini"':'')+'>'+esc(k)+(tk.has(k)?' ✓':'')+'</button>').join(''):'<span class="noact">Belum ada data kelas. Pastikan Mapping Siswa atau data siswa sudah terisi.</span>';
+}
+function mpList(){
+  $('mpCt').textContent=pw.length;$('mpX').disabled=!pw.length;
+  $('mpL').innerHTML=pw.length?pw.map(p=>'<div class="pw"><div class="pi"><b>'+esc(p.nama)+'</b><small>Kelas '+esc(p.kelas)+'</small></div><span class="tk">'+esc(p.token)+'</span><button class="sm" type="button" data-cp="'+esc(p.token)+'">Salin</button><button class="sm dl" type="button" data-del="'+esc(p.id)+'">Hapus</button></div>').join(''):'<p class="noact" style="padding:8px 0">Belum ada pengawas.</p>';
+}
+async function mpLoad(){
+  const r=await db.from('pengawas_ujian').select('id,nama,kelas,token,link').order('nama',{ascending:true}).range(0,999);
+  if(r.error)throw r.error;
+  pw=(r.data||[]).sort((a,b)=>String(a.nama).localeCompare(String(b.nama),'id')||kSort(a.kelas,b.kelas));
+  /* data lama yang belum punya link: isi dengan link halaman pengawas saat ini */
+  if(pw.some(p=>!p.link)){const u=pgLink();pw.forEach(p=>{if(!p.link)p.link=u;});db.from('pengawas_ujian').update({link:u}).is('link',null).then(()=>{},()=>{});}
+  mpList();
+}
+/* daftar kelas diambil dari data yang sudah ada supaya penulisannya sama persis dengan kelas ujian */
+async function kelasOpsi(){
+  const set=new Set();
+  try{const r=await db.from('mapping_siswa').select('kelas').range(0,499);if(!r.error)(r.data||[]).forEach(x=>{const k=kn(x.kelas);if(k)set.add(k);});}catch(_){}
+  rows.forEach(x=>{const k=kn(x.kelas);if(k)set.add(k);});
+  if(!set.size){
+    try{for(let f=0;f<10000;f+=1000){const r=await db.from('siswa').select('rombel').range(f,f+999);if(r.error)break;(r.data||[]).forEach(x=>{const k=kn(x.rombel);if(k)set.add(k);});if(!r.data||r.data.length<1000)break;}}catch(_){}
+  }
+  return [...set].sort(kSort);
+}
+async function mpOpen(op){
+  $('mpU').value=pgLink();
+  mpOpener=op;mpSel=new Set();mpTouched=false;mpPre=false;mpReady=false;
+  $('mpN').value='';$('mpT2').value=genTok();mpErr('');$('mpS').disabled=true;$('mpS').textContent='Simpan Pengawas';
+  $('mpL').innerHTML='<p class="noact" style="padding:8px 0">Memuat…</p>';$('mp').hidden=false;$('mpN').focus();
+  try{
+    const res=await Promise.all([mpLoad(),kelasOpsi()]);
+    mpKelas=res[1];mpChips();mpReady=true;$('mpS').disabled=false;
+  }catch(e){
+    $('mpL').innerHTML='';
+    mpErr(mpNoTbl(e)?MP_SQL:'Gagal memuat: '+((e&&e.message)||e));
+  }
+}
+async function mpSave(){
+  if(mpBusy||!mpReady)return;
+  const nama=kn($('mpN').value),tok=$('mpT2').value.trim().toUpperCase(),ks=[...mpSel];
+  if(nama.length<2){mpErr('Nama pengawas wajib diisi.');$('mpN').focus();return;}
+  if(!ks.length){mpErr('Pilih minimal satu kelas.');return;}
+  if(!/^[A-Z0-9]{4,20}$/.test(tok)){mpErr('Token 4 sampai 20 karakter, hanya huruf dan angka.');$('mpT2').focus();return;}
+  if(pw.some(p=>p.token===tok&&p.nama.toLowerCase()!==nama.toLowerCase())){mpErr('Token ini sudah dipakai pengawas lain. Buat token yang berbeda.');$('mpT2').focus();return;}
+  mpBusy=true;$('mpS').disabled=true;$('mpS').textContent='Menyimpan…';mpErr('');
+  try{
+    const r=await db.from('pengawas_ujian').insert(ks.map(k=>({nama:nama,kelas:k,token:tok,link:pgLink()}))).select('id');
+    if(r.error)throw r.error;
+    say(nama+' ditambahkan untuk '+ks.length+' kelas. Token: '+tok);
+    mpSel=new Set();mpTouched=false;mpPre=false;$('mpN').value='';$('mpT2').value=genTok();
+    await mpLoad();mpChips();$('mpN').focus();
+  }catch(e){
+    mpErr(e&&e.code==='23505'?'Pengawas ini sudah terdaftar di salah satu kelas yang dipilih. Daftar sudah dimuat ulang.':mpNoTbl(e)?MP_SQL:'Gagal menyimpan: '+((e&&e.message)||e));
+    if(e&&e.code==='23505'){try{await mpLoad();mpChips();}catch(_){}}
+  }
+  mpBusy=false;$('mpS').disabled=false;$('mpS').textContent='Simpan Pengawas';
+}
+$('bPw').onclick=function(){mpOpen(this);};
+$('mpC').onclick=mpClose;$('mpS').onclick=mpSave;
+$('mp').addEventListener('click',e=>{if(e.target===$('mp'))mpClose();});
+$('mpN').addEventListener('input',()=>{
+  const n=kn($('mpN').value).toLowerCase(),ex=n&&pw.find(p=>p.nama.toLowerCase()===n);
+  /* pengawas yang sudah ada: pakai tokennya agar satu token berlaku untuk semua kelasnya */
+  if(ex&&!mpTouched){$('mpT2').value=ex.token;mpPre=true;}
+  else if(!ex&&mpPre&&!mpTouched){$('mpT2').value=genTok();mpPre=false;}
+  mpChips();
+});
+$('mpT2').addEventListener('input',()=>{mpTouched=true;mpPre=false;});
+$('mpG').onclick=()=>{$('mpT2').value=genTok();mpTouched=true;mpPre=false;};
+$('mpK').addEventListener('click',e=>{
+  const b=e.target.closest('.kb');if(!b||b.disabled)return;
+  const k=b.dataset.k;if(mpSel.has(k))mpSel.delete(k);else mpSel.add(k);
+  b.setAttribute('aria-pressed',mpSel.has(k));mpErr('');
+});
+$('mpL').addEventListener('click',async e=>{
+  const c=e.target.closest('[data-cp]');
+  if(c){const t=c.dataset.cp;try{await navigator.clipboard.writeText(t);say('Token '+t+' disalin.');}catch(_){say('Token: '+t);}return;}
+  const d=e.target.closest('[data-del]');if(!d)return;
+  const p=pw.find(x=>String(x.id)===d.dataset.del);
+  if(!p||!confirm('Hapus pengawas '+p.nama+' untuk kelas '+p.kelas+'?'))return;
+  try{
+    const r=await db.from('pengawas_ujian').delete().eq('id',p.id).select('id');
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.length)throw new Error('Tidak ada baris yang dihapus. Periksa policy tabel.');
+    say('Pengawas dihapus.');await mpLoad();mpChips();
+  }catch(er){mpErr('Gagal menghapus: '+((er&&er.message)||er));}
+});
+
+/* cetak HTML lewat iframe tersembunyi (di dialog cetak pilih "Simpan sebagai PDF") */
+function printHtml(html,title){
+  const old=document.getElementById('prFr');if(old)old.remove();
+  const f=document.createElement('iframe');f.id='prFr';f.setAttribute('aria-hidden','true');
+  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(f);
+  const d=f.contentWindow.document;d.open();d.write(html);d.close();
+  const t0=document.title;let done=false;
+  const back=()=>{if(done)return;done=true;document.title=t0;setTimeout(()=>f.remove(),500);};
+  if(title)document.title=title;
+  f.contentWindow.addEventListener('afterprint',back);
+  setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(_){say('Gagal membuka dialog cetak.');back();}},250);
+  setTimeout(back,120000);
+}
+/* ===== Export PDF daftar pengawas (cetak lewat iframe tersembunyi; pilih "Simpan sebagai PDF") ===== */
+function mpPdf(){
+  if(!pw.length){say('Belum ada pengawas untuk diexport.');return;}
+  const tgl=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const links=[...new Set(pw.map(p=>p.link||pgLink()))];
+  const baris=pw.map((p,i)=>'<tr><td class="c">'+(i+1)+'</td><td>'+esc(p.nama)+'</td><td class="c">'+esc(p.kelas)+'</td><td class="c t">'+esc(p.token)+'</td></tr>').join('');
+  const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Daftar Pengawas Ujian</title><style>'
+    +'@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;font-size:12px;margin:0}'
+    +'h1{font-size:18px;margin:0 0 4px}.m{color:#555;margin:0 0 14px;font-size:11.5px}'
+    +'table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:7px 9px;text-align:left}'
+    +'th{background:#e8f3ec;font-size:11.5px}thead{display:table-header-group}tr{page-break-inside:avoid}'
+    +'.lk{border:1px solid #999;background:#f3f8f5;border-radius:6px;padding:8px 10px;margin:0 0 14px}.lk span{display:block;font-size:10.5px;color:#555;margin-bottom:2px}.lk a{font-family:Consolas,Menlo,monospace;font-weight:700;font-size:12.5px;color:#0b5cad;text-decoration:none;word-break:break-all}'
+    +'.c{text-align:center}.t{font-family:Consolas,Menlo,monospace;font-weight:700;letter-spacing:.08em}'
+    +'.f{margin-top:14px;font-size:10.5px;color:#666}'
+    +'</style></head><body><h1>Daftar Pengawas Ujian</h1><p class="m">Dicetak '+tgl+' · Total '+pw.length+' data pengawas</p>'
+    +'<div class="lk"><span>Link halaman pengawas</span>'+links.map(u=>'<a href="'+esc(u)+'">'+esc(u)+'</a>').join('<br>')+'</div>'
+    +'<table><thead><tr><th style="width:36px" class="c">No</th><th>Nama Pengawas</th><th class="c" style="width:110px">Kelas</th><th class="c" style="width:130px">Token</th></tr></thead><tbody>'+baris+'</tbody></table>'
+    +'<p class="f">Dokumen ini berisi token akses. Pengawas membuka link di atas lalu memasukkan token. Simpan dokumen ini dengan aman dan jangan disebarkan ke siswa.</p></body></html>';
+  printHtml(html,'Daftar Pengawas Ujian');
+}
+$('mpX').onclick=mpPdf;
+
+/* ===== Laporan PDF: Ujian Selesai, Pelanggaran, All ===== */
+const dtm=t=>t?new Date(t).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})+' '+hm(t):'-';
+const kecur=x=>{const n=+x.jumlah_pelanggaran||0;return (x.status_kecurangan||'Aman')+(n?' ('+n+' pelanggaran)':'');};
+const LAP={
+  berlangsung:{t:'Ujian Sedang Berlangsung',h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Batas Selesai','Status Kecurangan'],
+    r:x=>[x.nama_siswa||'-',x.kelas||'-',x.nama_ujian||'-',dtm(x.waktu_mulai),dtm(x.dl),kecur(x)]},
+  selesai:{t:'Ujian Selesai',h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Waktu Selesai','Durasi','Status Kecurangan'],
+    r:x=>[x.nama_siswa||'-',x.kelas||'-',x.nama_ujian||'-',dtm(x.waktu_mulai),dtm(x.waktu_selesai),dur(x),kecur(x)]},
+  pelanggaran:{t:'Pelanggaran',h:['Nama Siswa','Kelas','Nama Ujian','Waktu Mulai','Waktu Selesai','Pelanggaran','Alasan Terakhir','Status'],
+    r:x=>[x.nama_siswa||'-',x.kelas||'-',x.nama_ujian||'-',dtm(x.waktu_mulai),dtm(x.waktu_selesai),(+x.jumlah_pelanggaran||0)+' kali',x.alasan_terakhir||'-',/pengawas/i.test(x.status_kecurangan||'')?'Dihentikan pengawas':'Selesai paksa']}
+};
+function lapGroups(){
+  const now=Date.now(),by=(a,b)=>kSort(kelasOf(a),kelasOf(b))||String(a.nama_siswa||'').localeCompare(String(b.nama_siswa||''),'id');
+  const done=rows.filter(x=>x.status_ujian==='Selesai');
+  return {
+    berlangsung:rows.filter(x=>x.status_ujian==='Sedang Berlangsung'&&x.dl+60000>now).sort(by),
+    selesai:done.filter(x=>lvl(x)<2).sort(by),
+    pelanggaran:done.filter(x=>lvl(x)>=2).sort(by)
+  };
+}
+const lapJenis={selesai:['selesai'],pelanggaran:['pelanggaran'],all:['berlangsung','selesai','pelanggaran']};
+const lapNama={selesai:'Ujian Selesai',pelanggaran:'Pelanggaran',all:'Semua Data'};
+function lapPrint(j){
+  const g=lapGroups(),ks=lapJenis[j];if(!ks)return;
+  const total=ks.reduce((n,k)=>n+g[k].length,0);
+  if(!total){say('Belum ada data untuk laporan ini.');return;}
+  const now=new Date(),tgl=now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+' pukul '+hm(now);
+  const sek=($('nT').textContent||'').trim();
+  const sec=ks.map(k=>{
+    const L=LAP[k],l=g[k];
+    return '<h2>'+L.t+' <span>('+l.length+' siswa)</span></h2>'+(l.length
+      ?'<table><thead><tr><th class="c" style="width:32px">No</th>'+L.h.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'
+        +l.map((x,i)=>'<tr'+(k==='pelanggaran'?' class="cr"':'')+'><td class="c">'+(i+1)+'</td>'+L.r(x).map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+      :'<p class="em">Tidak ada data.</p>');
+  }).join('');
+  const ring=j==='all'?'<p class="m">Berlangsung: <b>'+g.berlangsung.length+'</b> · Selesai: <b>'+g.selesai.length+'</b> · Pelanggaran: <b>'+g.pelanggaran.length+'</b></p>':'';
+  const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Laporan Ujian - '+lapNama[j]+'</title><style>'
+    +'@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;font-size:11px;margin:0}'
+    +'h1{font-size:18px;margin:0 0 2px}.sk{font-size:12px;font-weight:700;color:#333;margin:0 0 2px}.m{color:#555;margin:0 0 12px;font-size:11px}'
+    +'h2{font-size:14px;margin:16px 0 6px;page-break-after:avoid}h2 span{font-weight:400;color:#555;font-size:12px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:6px}th,td{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}'
+    +'th{background:#e8f3ec;font-size:10.5px}thead{display:table-header-group}tr{page-break-inside:avoid}tr.cr td{background:#fff4f3}'
+    +'.c{text-align:center}.em{color:#666;font-style:italic;margin:4px 0 10px}'
+    +'</style></head><body>'
+    +(sek?'<p class="sk">'+esc(sek)+'</p>':'')+'<h1>Laporan Ujian: '+lapNama[j]+'</h1><p class="m">Dicetak '+tgl+' · Total '+total+' data</p>'+ring+sec+'</body></html>';
+  printHtml(html,'Laporan Ujian - '+lapNama[j]);
+}
+let mrOpener=null;
+function mrClose(){$('mr').hidden=true;if(mrOpener&&document.contains(mrOpener))mrOpener.focus();}
+function mrOpen(op){
+  mrOpener=op;
+  const g=lapGroups(),n={selesai:g.selesai.length,pelanggaran:g.pelanggaran.length,all:g.berlangsung.length+g.selesai.length+g.pelanggaran.length};
+  let first=null;
+  $('mrL').querySelectorAll('button').forEach(b=>{const c=n[b.dataset.j]||0;b.disabled=!c;b.querySelector('em').textContent=c;if(c&&!first)first=b;});
+  $('mrI').textContent=n.all?'Pilih jenis laporan yang akan diexport ke PDF.':'Belum ada data ujian untuk dilaporkan.';
+  $('mr').hidden=false;(first||$('mrC')).focus();
+}
+$('bLp').onclick=function(){mrOpen(this);};
+$('mrC').onclick=mrClose;
+$('mr').addEventListener('click',e=>{if(e.target===$('mr'))mrClose();});
+$('mrL').addEventListener('click',e=>{const b=e.target.closest('button[data-j]');if(!b||b.disabled)return;const j=b.dataset.j;mrClose();lapPrint(j);});
+
+/* ===== Link halaman pengawas (pengawas.html) ===== */
+const pgLink=()=>new URL('pengawas.html',location.href).href;
+async function pgCopy(){const u=pgLink();try{await navigator.clipboard.writeText(u);say('Link pengawas disalin: '+u);}catch(_){prompt('Salin link pengawas:',u);}}
+$('bLk').onclick=pgCopy;$('mpUc').onclick=pgCopy;
 $('mdC').onclick=cutClose;$('mdO').onclick=cutDo;
 $('md').addEventListener('click',e=>{if(e.target===$('md'))cutClose();});
 $('mdJ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();cutDo();}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('md').hidden)cutClose();if(!$('ml').hidden)lgClose();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('md').hidden)cutClose();if(!$('ml').hidden)lgClose();if(!$('mp').hidden)mpClose();if(!$('mr').hidden)mrClose();}});
 setInterval(()=>{
   const now=Date.now();let gone=false;
   document.querySelectorAll('[data-dl]').forEach(e=>{const r=+e.dataset.dl-now;if(r<-60000)gone=true;e.textContent=fmt(r);e.classList.toggle('low',r<=300000);});
