@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pantau Ujian — MADANI</title>
+<style>
+:root{--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;--text:#0f2a1d;--muted:#58705f;--accent:#12a05f;--red:#d12f26;--orange:#c77700;--line:rgba(0,0,0,.1);--bar:rgba(255,255,255,.6);--card:rgba(255,255,255,.88);--track:rgba(120,120,128,.16);--wall:linear-gradient(135deg,#9fe3bf 0%,#c4eed6 38%,#e6f4c8 70%,#f7e8b0 100%);color-scheme:light}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--wall) fixed;line-height:1.5;min-height:100vh;padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 20px;padding-top:calc(8px + env(safe-area-inset-top));background:var(--bar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:.5px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;min-width:0}
+.logo{flex:none;width:36px;height:36px;border-radius:10px;background:#04150d;overflow:hidden;display:grid;place-items:center;color:#fff;font-size:13px}.logo img{width:100%;height:100%;object-fit:contain}
+.sn{line-height:1.2;min-width:0}.sn b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sn small{font-size:11px;font-weight:500;color:var(--muted)}
+.sp{flex:1}
+.acct{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 12px;border-radius:99px;background:var(--track)}.acct div{text-align:right;line-height:1.2}.acct b{display:block;font-size:13px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acct small{font-size:11px;color:var(--muted)}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(160deg,#2fd283,#0b7a47)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:var(--card);border-radius:20px;box-shadow:0 14px 40px rgba(30,60,50,.16),0 0 0 .5px var(--line);padding:18px}
+.hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.hd h2{font-size:20px}
+.chip{font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;background:var(--track);color:var(--muted)}
+.live{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--muted)}.live i{width:9px;height:9px;border-radius:50%;background:#9aa;}.live.on i{background:#28c840;animation:pl 1.6s infinite}
+@keyframes pl{50%{opacity:.35}}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:.5px solid var(--line);vertical-align:top}
+tr.mc td{background:rgba(255,159,10,.10)}tr.cr td{background:rgba(255,69,58,.10)}
+.bd{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px}
+.b-ok{background:rgba(18,160,95,.15);color:#0b7a47}.b-mc{background:rgba(255,159,10,.2);color:#9a5b00}.b-cr{background:rgba(255,69,58,.18);color:#b3261e}.b-st{background:rgba(59,130,246,.15);color:#1d4ed8}
+td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.mono{font-family:ui-monospace,Menlo,monospace;font-weight:700}.mono.low{color:var(--red)}
+.empty{text-align:center;padding:48px 16px}.empty .ei{font-size:44px;line-height:1}.empty h3{margin-top:10px;font-size:18px}.empty p{margin-top:4px;color:var(--muted);font-size:14px}
+.empty .rt{margin-top:14px;padding:9px 18px;border-radius:12px;background:var(--track);font-weight:700;font-size:14px}
+@media(max-width:720px){.wrap{padding:10px 8px}.acct div{display:none}.acct{padding:4px}
+ thead{display:none}table,tbody,tr,td{display:block;width:100%}
+ tr{margin-bottom:10px;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 0 0 .5px var(--line)}
+ td{display:flex;justify-content:space-between;gap:12px;border-bottom:.5px solid var(--line);text-align:right}
+ td::before{content:attr(data-l);flex:none;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);text-align:left}}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding:0 14px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
+.dock nav{pointer-events:auto;width:100%;max-width:440px;display:flex;justify-content:space-around;gap:8px;padding:10px 14px;border-radius:34px;background:rgba(255,255,255,.55);backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);box-shadow:0 14px 40px rgba(20,60,40,.25),0 0 0 .5px rgba(0,0,0,.14)}
+.d{position:relative;display:grid;place-items:center;border-radius:15px;font-size:0;transition:transform .2s}.d:hover{transform:translateY(-6px) scale(1.1)}
+.d .ic{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.4)}.d .ic svg{width:28px;height:28px}
+.d[data-tip]::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translate(-50%,4px);padding:6px 11px;border-radius:8px;background:#000;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;transition:.15s}
+.d[data-tip]:hover::after,.d[data-tip]:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.live.on i{animation:none}.d{transition:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="brand"><span class="logo" id="logo">M</span><span class="sn"><b id="nT">MADANI</b><small>Pantau Ujian</small></span></div>
+  <span class="sp"></span>
+  <div class="acct"><div><b id="aN">Guru</b><small>Guru</small></div><span class="av" id="aV">G</span></div>
+</header>
+
+<main class="wrap">
+  <section class="panel" aria-labelledby="t">
+    <div class="hd"><h2 id="t">Pantau Ujian</h2><span class="chip" id="cnt">0 siswa</span><span class="live" id="live"><i></i><span id="lt">Memuat…</span></span></div>
+    <div id="box"><div class="empty"><p>Memuat…</p></div></div>
+  </section>
+</main>
+
+<div class="dock"><nav aria-label="Menu">
+  <a class="d" data-tip="Beranda" aria-label="Beranda" href="adminguru.html"><span class="ic" style="background:linear-gradient(160deg,#2fd283,#0b7a47)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7.5 9 7.5M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5"/></svg></span>Beranda</a>
+  <a class="d" data-tip="Kembali ke Soal" aria-label="Kembali ke Soal" href="soal.html"><span class="ic" style="background:linear-gradient(160deg,#a78bfa,#6d28d9)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>Soal</a>
+  <button class="d" id="bR" data-tip="Muat Ulang" aria-label="Muat ulang" type="button"><span class="ic" style="background:linear-gradient(160deg,#60a5fa,#1d4ed8)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.4-5.7M20 4v5h-5"/></svg></span>Muat Ulang</button>
+</nav></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+const db=window.supabase.createClient('https://mpduyoixnjulxlrmjevp.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHV5b2l4bmp1bHhscm1qZXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzkwNjksImV4cCI6MjEwODIxNTA2OX0.5kmqhSIoxyurflVn_BYaSJmyU7StTKZ9dqeRWpO7p_Y');
+const $=i=>document.getElementById(i);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hm=t=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}).replace('.',':');
+const fmt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=v=>String(v).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(x);};
+const EMPTY='<div class="empty"><div class="ei">🕊️</div><h3>Tidak Ada Ujian Yang Sedang Berlangsung</h3><p>Data akan muncul otomatis saat siswa memulai ujian.</p></div>';
+let rows=[],lt=null,busy=false,again=false;
+
+async function nav(){
+  try{const r=await db.from('profil').select('nama_guru,nama_sekolah,logo_url').limit(1).maybeSingle();
+    const d=r.data;if(!d)return;
+    if(d.nama_sekolah)$('nT').textContent=d.nama_sekolah;
+    if(d.logo_url)$('logo').innerHTML='<img src="'+esc(d.logo_url)+'" alt="">';
+    if(d.nama_guru){$('aN').textContent=d.nama_guru;$('aV').textContent=d.nama_guru.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+  }catch(_){}
+}
+
+async function load(){
+  if(busy){again=true;return;}busy=true;
+  try{
+    const r=await db.from('ujianberlangsung').select('*').eq('status_ujian','Sedang Berlangsung').order('waktu_mulai',{ascending:true}).range(0,999);
+    if(r.error)throw r.error;
+    const data=r.data||[],ids=[...new Set(data.map(x=>x.soal_aktif_id))];
+    const A={};
+    if(ids.length){const a=await db.from('soal_aktif').select('id,durasi_menit,selesai').in('id',ids);(a.data||[]).forEach(x=>A[String(x.id)]=x);}
+    /* batas selesai = mulai + durasi, dibatasi jam selesai asesmen; tanpa data durasi dipakai batas 4 jam */
+    rows=data.map(x=>{const a=A[String(x.soal_aktif_id)],st=new Date(x.waktu_mulai).getTime();
+      let dl=a&&a.durasi_menit?st+a.durasi_menit*60000:st+4*3600000;
+      if(a&&a.selesai)dl=Math.min(dl,new Date(a.selesai).getTime());
+      return Object.assign({},x,{dl:dl});});
+    lt=new Date();render();
+  }catch(e){
+    const m=(e&&e.message)||String(e);
+    const nt=e&&(e.code==='42P01'||e.code==='PGRST205'||/does not exist|schema cache/i.test(m));
+    $('box').innerHTML='<div class="empty"><div class="ei">⚠️</div><h3>'+(nt?'Tabel ujianberlangsung belum dibuat':'Gagal memuat data')+'</h3><p>'+esc(nt?'Jalankan skrip SQL ujianberlangsung.sql di Supabase.':m)+'</p><button class="rt" id="rt" type="button">Coba lagi</button></div>';
+    $('rt').onclick=load;$('cnt').textContent='-';
+  }
+  busy=false;if(again){again=false;load();}
+}
+
+const lvl=x=>/curang/i.test(x.status_kecurangan||'')?2:/curiga/i.test(x.status_kecurangan||'')?1:0;
+function render(){
+  const now=Date.now(),L=rows.filter(x=>x.dl+60000>now).sort((a,b)=>lvl(b)-lvl(a)||String(a.nama_siswa||'').localeCompare(String(b.nama_siswa||''),'id'));
+  $('cnt').textContent=L.length+' siswa';
+  $('live').querySelector('#lt').textContent=(live?'Live':'Auto-refresh')+(lt?' · '+lt.toLocaleTimeString('id-ID'):'');
+  if(!L.length){$('box').innerHTML=EMPTY;return;}
+  $('box').innerHTML='<table><thead><tr><th>No</th><th>Nama Siswa</th><th>Kelas</th><th>Nama Ujian</th><th>Waktu Mulai</th><th>Batas Selesai</th><th>Sisa Waktu</th><th>Status Kecurangan</th><th>Status Ujian</th></tr></thead><tbody>'+
+  L.map((x,i)=>{const v=lvl(x),n=+x.jumlah_pelanggaran||0;
+    return '<tr class="'+(v==2?'cr':v==1?'mc':'')+'"><td data-l="No">'+(i+1)+'</td><td data-l="Nama Siswa"><b>'+esc(x.nama_siswa||'-')+'</b></td><td data-l="Kelas">'+esc(x.kelas||'-')+'</td><td data-l="Nama Ujian">'+esc(x.nama_ujian||'-')+'</td><td data-l="Waktu Mulai">'+hm(x.waktu_mulai)+'</td><td data-l="Batas Selesai">'+hm(x.dl)+'</td>'+
+    '<td data-l="Sisa Waktu"><span class="mono" data-dl="'+x.dl+'">'+fmt(x.dl-now)+'</span></td>'+
+    '<td data-l="Kecurangan"><span class="bd '+(v==2?'b-cr':v==1?'b-mc':'b-ok')+'">'+esc(x.status_kecurangan||'Aman')+'</span>'+(n?'<small>'+n+' pelanggaran'+(x.alasan_terakhir?' · '+esc(x.alasan_terakhir):'')+'</small>':'')+'</td>'+
+    '<td data-l="Status"><span class="bd b-st">'+esc(x.status_ujian)+'</span></td></tr>';}).join('')+'</tbody></table>';
+}
+let live=false;
+setInterval(()=>{
+  const now=Date.now();let gone=false;
+  document.querySelectorAll('[data-dl]').forEach(e=>{const r=+e.dataset.dl-now;if(r<-60000)gone=true;e.textContent=fmt(r);e.classList.toggle('low',r<=300000);});
+  if(gone)render();
+},1000);
+setInterval(load,15000);
+$('bR').onclick=load;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
+try{
+  db.channel('pantau-ujian').on('postgres_changes',{event:'*',schema:'public',table:'ujianberlangsung'},()=>load())
+    .subscribe(s=>{live=s==='SUBSCRIBED';$('live').classList.toggle('on',live);if(rows.length||lt)render();});
+}catch(_){}
+nav();load();
+})();
+</script>
+</body>
+</html>
